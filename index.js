@@ -65,6 +65,14 @@ server.on('upgrade', (request, socket, head) => {
   });
 });
 
+function broadcastMessage(message, ws=null) {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  })
+}
+
 wss.on('connection', function (ws, request) {
   // Upon connection right before clientws.onopen
   const userId = request.session.userId;
@@ -73,14 +81,25 @@ wss.on('connection', function (ws, request) {
   console.log(`user ${userId} connected, current connections: `);
   console.log(sessionUsers.keys());
   
-  const message = {
+  // Send welcome message to user entering room
+  const welcomeMessage = {
     type: "system",
     sender: "[room-general]",
     time: Date.now(),
     body: "======== Welcome to kenny.net general chat ========",
     userId,
   }
-  ws.send(JSON.stringify(message));   // this sends to clientws.onmessage
+  ws.send(JSON.stringify(welcomeMessage));   // this sends to clientws.onmessage
+  
+  // Broadcast entering user to clients
+  console.log(`Broadcasting user ${userId} entrance`);
+  const userEntryMessage = {
+    type: "system",
+    sender: "[room-genera]l",
+    time: Date.now(),
+    body: `User ${userId} entered the chat.`
+  }
+  broadcastMessage(userEntryMessage);
 
 
   ws.on('message', function (rawMessage) {
@@ -88,30 +107,29 @@ wss.on('connection', function (ws, request) {
     // console.log(message)
     switch (message.type) {
       case 'userSendChat':
-        console.log(`Broadcasting message "${message.body}" from user ${userId}`);  // TODO make this work
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(message));
-          }
-        })
+        message.sender = userId;
+        console.log(`Broadcasting message "${message.body}" from user ${message.sender}`);  // TODO make this work
+        broadcastMessage(message)
         // TODO send msg to update usersList
         break;
-      
-      // Below doesn't work because ws is destroyed before client receives msg
-      // So instead hackily let client generate a leaving chat room message in kind
-      // case 'userLeaveChat':
-      //   const closeMessage = {
-      //     type: "system",
-      //     sender: "[room-general]",
-      //     time: Date.now(),
-      //     body: "======== You have left kenny.net general chat ========",
-      //     userId,
-      //   }
-      //   console.log('sending closeMessage')
-      //   ws.send(JSON.stringify(closeMessage));
-      //   break;
+      case 'userLeaveChat':
+        // Below doesn't work because ws is destroyed before client receives msg
+        // So instead hackily let client generate a leaving chat room message in kind
+        // const closeMessage = {
+        //   type: "system",
+        //   sender: "[room-general]",
+        //   time: Date.now(),
+        //   body: "======== You have left kenny.net general chat ========",
+        //   userId,
+        // }
+        // console.log('sending closeMessage')
+        // ws.send(JSON.stringify(closeMessage));
+        message.body = `${userId} has left the chat.`;
+        message.sender = "[room-general]";
+        broadcastMessage(message);
+        break;
       default:
-        console.log('Error: Unhandled message type');
+        console.log('Error: Unhandled message type:', message.type);
     }
   })
 

@@ -113,7 +113,7 @@
         // even if never connecting, thus the close event handler must address
         if (!state.isLoggedIn) {                  // close events when not logged in
           addChatFromClient(`You must login to site before connected to chat.`);
-        } else if (isChatConnected) {       // close events when logged in
+        } else if (state.isChatConnected) {       // close events when logged in
           connectButton.innerText = 'Connect to chat'
           addChatFromClient(`========== You have left the chat ========`);
           ws = null;
@@ -127,8 +127,8 @@
       default:
         console.log('Unhandled event.type')
     }
-
   }
+  
   function handleMessage(message) {
     console.log(message)
     let { type, sender, time, body } = message;
@@ -143,6 +143,9 @@
       case 'userSendChat':
         // TODO setup style here
         addChat(`${time} ${sender}: ${body}`)
+        break;
+      case 'userLeaveChat':
+        addChat(`${time} ${sender}: ${body}`);
         break;
       default:
         console.log('unhandled message.type');
@@ -168,7 +171,6 @@
       type: 'userSendChat',
       body: userTextInput.value,
       time: Date.now(),
-      sender: userId,
     }
     const rawMessage = JSON.stringify(message);
     ws.send(rawMessage);
@@ -180,7 +182,7 @@
       type: 'userLeaveChat',
       body: null,
       time: Date.now(),
-      send: userId,
+      sender: null,
     };
     const rawMessage = JSON.stringify(message);
     ws.send(rawMessage);
