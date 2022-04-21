@@ -68,66 +68,59 @@
     }
   });
 
-  sendButton.addEventListener('click', sendMsg)
+  sendButton.addEventListener('click', sendChatMessage)
   userTextInput.addEventListener('keydown', (e) => {
     // console.log('e.key', e.key)
     // console.log('e.keycode', e.keycode)
-    if (e.key === 'Enter') sendMsg();
+    if (e.key === 'Enter') sendChatMessage(e);
   })
   
-  function sendMsg() {
+  function sendChatMessage(e) {
     if (!ws) {
       addChat('[client] Cannot send message, you are disconnected');
       return;
     }
-    const msg = userTextInput.value;
-    ws.send(msg);
-    addChat(msg)
+    const message = {
+      type: 'userSendChat',
+      body: userTextInput.value,
+      time: Date.now(),
+    }
+    ws.send(message);
     userTextInput.value = '';
   }
   function addChat(body) {
-    // TODO add time and user
-    // TODO format color based on type
-    // sys = blue, user = yellowgreen
     chatBox.textContent += `\n${body}`;
-
-    // What's this do?
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   function handleEvent(event) {
     console.log('cli rcv event.type', event.type)
-    console.log('event.data', event.data)
-    // const data = JSON.parse(event.data);
     switch (event.type) {
       case 'open':
         connectButton.innerText = 'Disconnect from chat'
         addChat('[client] You have entered the chat.');
         break;
       case 'message':
-          const message = event.data;
-          if (message.type === 'system') {
-            addChat(`${message.time} [sys]: ${message.body}`);
-          }  //
-          // if event is a response object then parse
-          // if event is a ws message, proceed 
-          // const parsedMessage = JSON.parse(message.data);
-          // switch (parsedMessage.type) {
-          //   case 'system':
-          //     console.log('switch case system')
-          //     addChat(parsedMessage.body);
-          //     break;
-          //   default:
-          //     console.log('switch case default')
-          //     addChat(message);
-          // }
-          // addChat((message))
-
-
+          handleMessage(JSON.parse(event.data));
+      break;
+      default:
+        console.log('Unhandled event.type')
     }
 
   }
   function handleMessage(message) {
-
+    console.log(message)
+    switch (message.type) {
+      case 'system':
+        // TODO setup style here
+        addChat(`${message.time} [sys]: ${message.body}`);
+        break;
+      case 'userSendChat':
+        // TODO setup style here
+        addChat(`${message.time} ${message.userHandle}: ${message.body}`)
+      default:
+        console.log('unhandled message.type');
+        break;
+    }
   }
 })()
