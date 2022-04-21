@@ -7,6 +7,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 const { WebSocketServer } = require('ws');
+const WebSocket = require('ws');
 
 const app = express();
 const sessionUsers = new Map();
@@ -24,17 +25,19 @@ app.use(sessionParser);
 
 app.post('/login', (req, res) => {
   const id = uuid.v4();
-  console.log(`Updating session for user $(id})`);
+  console.log(`Updating session for user ${id})`);
   req.session.userId = id;
-  res.send({ result: 'OK', message: `You are logged in as user ${id}` });
+  res.send({ result: 'OK', message: `You are logged in as user ${id}.` });
 });
 
-app.delete('/logout', (req, res) => {
-  const ws = map.get(request.session.userId);
-  console.log(`Destroying session for user id: ${request.session.userId }`);
-  request.session.destroy(() => {
-    if (ws) ws.close();
-    response.send({ result: 'OK', message: 'Session destroyed' });
+app.post('/logout', (req, res) => {
+  const ws = sessionUsers.get(req.session.userId);
+  console.log(`Destroying session for user id: ${req.session.userId }`);
+  req.session.destroy(() => {
+    if (ws) {
+      ws.close();
+    }
+    res.send({ result: 'OK', message: 'You are logged out.' });
   });
 });
 
@@ -70,23 +73,32 @@ wss.on('connection', function (ws, request) {
   sessionUsers.set(userId, ws);
 
   console.log(`user ${userId} connected, current connections: `);
-  console.table(wss.clients);
+  console.dir(sessionUsers.keys());
   
   const message = {
-    body: "Welcome to kenny.net chat",
+    type: "system",
+    body: "======== Welcome to kenny.net chat ========",
     name: "kenny.net",
     time: Date.now(),
   }
   ws.send(JSON.stringify(message));
 
+  // TODO send msg to update usersList
+
   ws.on('message', function (message) {
-    console.log(`Received message: ${message} from ${userId}`);
+    console.log(`Broadcasting message "${message}" from ${userId}`);
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    })
   })
 
   ws.on('close', function () {
+    ws.send('You left the chat.');
     sessionUsers.delete(userId);
     console.log('Client disconnected, current connections: '); 
-    console.table(wss.clients);
+    console.log(`${sessionUsers}`);
   })  
 
 })
