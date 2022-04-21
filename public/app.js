@@ -7,19 +7,12 @@
   const userTextInput = document.querySelector('#userTextInput');
   const sendButton = document.querySelector('#send');
 
-  let userId;
+  let ws;
   let state = {
     isLoggedIn: false,
     isChatConnected: false,
     room: '',
   };
-  function resetState() {
-    state = {
-      isLoggedIn: false,
-      isChatConnected: false,
-      room: '',
-    }
-  }
 
   loginButton.addEventListener('click', async () => {
     if (!state.isLoggedIn) {
@@ -28,7 +21,7 @@
           '/login', 
           { method: 'POST', credentials: 'same-origin', }
         );
-  
+        
         if (response.ok) {
           const data = await response.json();
           addChat(data.message);
@@ -36,14 +29,13 @@
         } else {
           throw new Error('Unexpected login response');
         }
-  
       } catch (err) {
         console.log('Login Error:', err.message);
       }
     } else {
       addChatFromClient(`You are already logged in!`);
     }
-  })
+  });
 
   logoutButton.addEventListener('click', async () => {
     if (state.isLoggedIn) {
@@ -65,18 +57,22 @@
     } else {
       addChatFromClient(`You are already logged out!`);
     }
-  })
+  });
 
-  let ws;
 
   connectButton.addEventListener('click', () => {
     // Is a toggle button, thus cannot attempt a disconnect when already disconnected
     // As a result this condition isn't handled in the event handler 
     if (ws) { 
       // Need this in order to trigger server to send the leave chat room message
-      sendCloseMessage();
-      
+      notifyLeave();
       ws.onerror = ws.onopen = ws.onclose = null;
+      // BUG? using removeEL's causes the client to not receive
+      // an event.type close that triggers the "left chat" chatbox msg.
+      // ws.removeEventListener('open', handleEvent);
+      // ws.removeEventListener('message', handleEvent);
+      // ws.removeEventListener('error', handleEvent);
+      // ws.removeEventListener('close', handleEvent);
       ws.close();
     } else {
       ws = new WebSocket(`wss://${location.host}`);
@@ -88,9 +84,10 @@
   });
 
   sendButton.addEventListener('click', sendChatMessage)
+  // CSDR better way to do this without making it a form... \
+  // or should it be a form? eg POST to route with userId and data?...
+  // how does a form accomplish this?
   userTextInput.addEventListener('keydown', (e) => {
-    // console.log('e.key', e.key)
-    // console.log('e.keycode', e.keycode)
     if (e.key === 'Enter') sendChatMessage(e);
   })
   
@@ -99,26 +96,25 @@
     console.log('cli rcv event.type', event.type)
     switch (event.type) {
       case 'error':
-        console.log('WS Error:', event);
         console.log('WS Error code:', event.code);     
         break;
       case 'open':
         // Can only open if already logged in
-        connectButton.innerText = 'Disconnect from chat'
+        connectButton.innerText = 'Disconnect from chat';
         state.isChatConnected = true;
         state.room = 'general';
         break;
       case 'close':
-        // WS can send a close event on an attempted new ws
-        // even if never connecting, thus the close event handler must address
-        if (!state.isLoggedIn) {                  // close events when not logged in
+        // WS sends a close event even when a new ws object fails to connect
+        // Thus this must:
+        if (!state.isLoggedIn) {              // handle close events when not logged in
           addChatFromClient(`You must login to site before connected to chat.`);
-        } else if (state.isChatConnected) {       // close events when logged in
-          connectButton.innerText = 'Connect to chat'
+        } else if (state.isChatConnected) {   // handle close events when logged in
           addChatFromClient(`========== You have left the chat ========`);
-          ws = null;
           state.isChatConnected = false;
           state.room = '';
+          connectButton.innerText = 'Connect to chat'
+          ws = null;
         }
         break;
       case 'message':
@@ -130,28 +126,23 @@
   }
   
   function handleMessage(message) {
-    console.log(message)
     let { type, sender, time, body } = message;
     switch (type) {
       case 'system':
-        // TODO setup style here
-        console.log(`cli rcvd sys msg`)
-        console.log(message);
-        userId = message.userId;
+        // TODO setup style around here
         addChat(`${time} ${sender}: ${body}`);
         break;
       case 'userSendChat':
-        // TODO setup style here
+        // TODO setup style around here
         addChat(`${time} ${sender}: ${body}`)
         break;
       case 'userLeaveChat':
-        console.log('does userLeaveChat msg on client ever execute?')
         addChat(`${time} ${sender}: ${body}`);
         break;
       default:
-        console.log('unhandled message.type');
+        console.log('Unhandled message.type');
         break;
-      }
+    }
   }
   
   function addChat(body) {
@@ -178,7 +169,9 @@
     userTextInput.value = '';
   }
 
-  function sendCloseMessage(e) {
+  function notifyLeave(e) {
+    // Notify WSServer connection is closing
+    // so it can in turn notify the room.
     const message = {
       type: 'userLeaveChat',
       body: null,
@@ -189,4 +182,11 @@
     ws.send(rawMessage);
   }
   
+  function resetState() {
+    state = {
+      isLoggedIn: false,
+      isChatConnected: false,
+      room: '',
+    }
+  }
 })()

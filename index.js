@@ -25,7 +25,10 @@ app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
-  res.send({ result: 'OK', message: `${Date.now()} [knet] You are logged in as user ${id}.` });
+  res.send({ 
+    result: 'OK', 
+    message: `${Date.now()} [knet] You logged in as user ${id}.` 
+  });
 });
 
 app.post('/logout', (req, res) => {
@@ -35,7 +38,10 @@ app.post('/logout', (req, res) => {
     if (ws) {
       ws.close();
     }
-    res.send({ result: 'OK', message: `${Date.now()} [knet] You are logged out.` });
+    res.send({ 
+      result: 'OK', 
+      message: `${Date.now()} [knet] You are logged out.`, 
+    });
   });
 });
 
@@ -67,7 +73,7 @@ server.on('upgrade', (request, socket, head) => {
 
 
 wss.on('connection', function (ws, request) {
-  // Upon connection right before clientws.onopen
+  // Upon connection right before client ws opens
   const userId = request.session.userId;
   sessionUsers.set(userId, ws);
 
@@ -80,12 +86,11 @@ wss.on('connection', function (ws, request) {
     sender: "[room-general]",
     time: Date.now(),
     body: "======== Welcome to kenny.net general chat ========",
-    userId,
   }
   ws.send(JSON.stringify(welcomeMessage));   // this sends to clientws.onmessage
   
   // Broadcast entering user to clients
-  console.log(`Broadcasting user ${userId} entrance`);
+  // console.log(`Broadcasting user ${userId} entrance`);
   const userEntryMessage = {
     type: "system",
     sender: "[room-genera]l",
@@ -93,12 +98,11 @@ wss.on('connection', function (ws, request) {
     body: `User ${userId} entered the chat.`
   }
   broadcastMessage(userEntryMessage, ws);
+  
   // TODO send msg to update usersList
-
 
   ws.on('message', function (rawMessage) {
     const message = JSON.parse(rawMessage);
-    // console.log(message)
     switch (message.type) {
       case 'userSendChat':
         message.sender = userId;
@@ -106,21 +110,12 @@ wss.on('connection', function (ws, request) {
         broadcastMessage(message)
         break;
       case 'userLeaveChat':
-        // Below doesn't work because ws is destroyed before client receives msg
-        // So instead hackily let client generate a leaving chat room message in kind
-        // const closeMessage = {
-        //   type: "system",
-        //   sender: "[room-general]",
-        //   time: Date.now(),
-        //   body: "======== You have left kenny.net general chat ========",
-        //   userId,
-        // }
-        // console.log('sending closeMessage')
-        // ws.send(JSON.stringify(closeMessage));
         message.body = `${userId} has left the chat.`;
         message.sender = "[room-general]";
         broadcastMessage(message);
+        
         // TODO send msg to update usersList
+        
         break;
       default:
         console.log('Error: Unhandled message type:', message.type);
@@ -133,10 +128,8 @@ wss.on('connection', function (ws, request) {
     })
 
   })
+
   function broadcastMessage(message, ws=null) {
-    // WARN the broadcast is not received by the client initiator
-    // despite repo/ws docs stating otherwise, indeed providing
-    // an example for excluding the client initiator from receiving broadcast
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN && client !== ws) {
         client.send(JSON.stringify(message));
@@ -147,12 +140,12 @@ wss.on('connection', function (ws, request) {
 
 wss.on('close', function(event) {
   console.log('wss close:', event);
-  // TODO broadcast server/room shutting down
+  // TODO find a way to broadcast server/room shutting down
 })
 
 const PORT = process.env.PORT;
-const IP = '192.168.1.200';
-server.listen(PORT, IP, () => {
+const IP = '0.0.0.0';
+server.listen(PORT, () => {
   console.log(`listening on https://${IP}:${PORT}`);
 });
 
