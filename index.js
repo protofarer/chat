@@ -25,14 +25,14 @@ app.use(sessionParser);
 
 app.post('/login', (req, res) => {
   const id = uuid.v4();
-  console.log(`Updating session for user ${id})`);
+  console.log(`Setup session for user ${id})`);
   req.session.userId = id;
   res.send({ result: 'OK', message: `You are logged in as user ${id}.` });
 });
 
 app.post('/logout', (req, res) => {
   const ws = sessionUsers.get(req.session.userId);
-  console.log(`Destroying session for user id: ${req.session.userId }`);
+  console.log(`Destroying session for user ${req.session.userId }`);
   req.session.destroy(() => {
     if (ws) {
       ws.close();

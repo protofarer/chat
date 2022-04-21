@@ -17,29 +17,25 @@
 
   loginButton.addEventListener('click', async () => {
     let response;
+    let data;
     try {
       response = await fetch(
         '/login', 
         { method: 'POST', credentials: 'same-origin', }
       );
-    } catch (err) {
-      console.log('login fetchError:', err.message);
-      throw new Error('Unexpected response');
-    }
-   
-    console.log('response.ok=', response.ok);
-    
-    // Unsure what message is received from server upon login?
-    let msg;
-    if (response.ok) {
-      const data = await response.json();
-      msg = JSON.stringify(data, null, 2);
-    } else {
-      console.log('login responseError:', response);
-      throw new Error('Unexpected response');
-    }
 
-    updateChat(JSON.parse(msg).message);
+      if (response.ok) {
+        data = await response.json();
+        // msg = data;
+        // msg = JSON.stringify(data, null, 2);
+      } else {
+        throw new Error('Unexpected login json response');
+      }
+
+      updateChat(data.message);
+    } catch (err) {
+      console.log('Login Error:', err.message);
+    }
   })
 
   logoutButton.addEventListener('click', async () => {
