@@ -48,9 +48,21 @@ const server = https.createServer(
 
 const wss = new WebSocketServer({ noServer: true, clientTracking: true });
 
-// wss.handleUpgrade(request, socket, head, function (ws) {
-//   wss.emit('connection', ws, request);
-// });
+server.on('upgrade', (request, socket, head) => {
+  console.log('Parsing session from request');
+  sessionParser(request, {}, () => {
+    if (!request.session.userId) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+    console.log('Session parsed');
+
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  });
+});
 
 wss.on('connection', function (ws, request) {
   // Upon connection
