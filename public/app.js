@@ -70,6 +70,8 @@
   let ws;
 
   connectButton.addEventListener('click', () => {
+    // Is a toggle button, thus cannot attempt a disconnect when already disconnected
+    // As a result this condition isn't handled in the event handler 
     if (ws) { 
       // Need this in order to trigger server to send the leave chat room message
       sendCloseMessage();
@@ -101,17 +103,19 @@
         console.log('WS Error code:', event.code);     
         break;
       case 'open':
+        // Can only open if already logged in
         connectButton.innerText = 'Disconnect from chat'
         state.isChatConnected = true;
         state.room = 'general';
         break;
       case 'close':
-        connectButton.innerText = 'Connect to chat'
-        if (!state.isChatConnected) {
+        // WS can send a close event on an attempted new ws
+        // even if never connecting, thus the close event handler must address
+        if (!isLoggedIn) {                  // close events when not logged in
           addChatFromClient(`You must login to site before connected to chat.`);
-        } else {
+        } else if (isChatConnected) {       // close events when logged in
+          connectButton.innerText = 'Connect to chat'
           addChatFromClient(`========== You have left the chat ========`);
-          console.log(event)
           ws = null;
           state.isChatConnected = false;
           state.room = '';
