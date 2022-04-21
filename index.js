@@ -27,7 +27,7 @@ app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
-  res.send({ result: 'OK', message: `You are logged in as user ${id}.` });
+  res.send({ result: 'OK', message: `[sys] You are logged in as user ${id}.` });
 });
 
 app.post('/logout', (req, res) => {
@@ -37,7 +37,7 @@ app.post('/logout', (req, res) => {
     if (ws) {
       ws.close();
     }
-    res.send({ result: 'OK', message: 'You are logged out.' });
+    res.send({ result: 'OK', message: '[sys] You are logged out.' });
   });
 });
 
@@ -77,16 +77,17 @@ wss.on('connection', function (ws, request) {
   
   const message = {
     type: "system",
-    body: "======== Welcome to kenny.net chat ========",
+    body: "======== Welcome to kenny.net general chat ========",
     name: "kenny.net",
     time: Date.now(),
   }
-  ws.send(JSON.stringify(message));
+  ws.send(JSON.stringify(message));   // this sends to clientws.onmessage
 
-  // TODO send msg to update usersList
 
   ws.on('message', function (message) {
     console.log(`Broadcasting message "${message}" from ${userId}`);
+    // TODO make this work
+  // TODO send msg to update usersList
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
@@ -95,12 +96,16 @@ wss.on('connection', function (ws, request) {
   })
 
   ws.on('close', function () {
-    ws.send('You left the chat.');
+    // ws.send('You left the chat.');
     sessionUsers.delete(userId);
     console.log('Client disconnected, current connections: '); 
     console.log(`${sessionUsers}`);
   })  
+})
 
+wss.on('close', function(event) {
+  console.log('wss close:', event);
+  // TODO broadcast server/room shutting down
 })
 
 server.listen(PORT, () => {
