@@ -37,7 +37,7 @@ app.post('/logout', (req, res) => {
     if (ws) {
       ws.close();
     }
-    res.send({ result: 'OK', message: '[knet] You are logged out.' });
+    res.send({ result: 'OK', message: `${Date.now()} [knet] You are logged out.` });
   });
 });
 
@@ -77,7 +77,7 @@ wss.on('connection', function (ws, request) {
   
   const message = {
     type: "system",
-    sender: "[sys-genchat]",
+    sender: "[room-general]",
     time: Date.now(),
     body: "======== Welcome to kenny.net general chat ========",
   }

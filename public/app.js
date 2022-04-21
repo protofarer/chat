@@ -56,10 +56,10 @@
         
         ws.addEventListener('open', handleEvent);
         ws.addEventListener('message', handleEvent);
-        ws.addEventListener('error', () => addChat('WebSocket error'));
+        ws.addEventListener('error', () => addChatFromClient(`WebSocket error`));
         ws.addEventListener('close', () => {
           connectButton.innerText = 'Connect to chat'
-          addChat(`${Date.now()} [cli] You have left the chat.`);
+          addChatFromClient(`You have left the chat.`);
           ws = null;
         })
       } catch (err) {
@@ -77,7 +77,7 @@
   
   function sendChatMessage(e) {
     if (!ws) {
-      addChat(`${Date.now()}[cli] Cannot send message, you are disconnected`);
+      addChatFromClient(`Cannot send message, you are disconnected`);
       return;
     }
     const message = {
@@ -98,7 +98,8 @@
     switch (event.type) {
       case 'open':
         connectButton.innerText = 'Disconnect from chat'
-        addChat(`${Date.now()} [cli] You have entered the chat.`);
+        addChatFromClient(`You have entered the chat`);
+        // addChat(`${Date.now()} [cli] You have entered the chat.`);
         break;
       case 'message':
           handleMessage(JSON.parse(event.data));
@@ -123,5 +124,8 @@
         console.log('unhandled message.type');
         break;
     }
+  }
+  function addChatFromClient(body) {
+    addChat(`${Date.now()} [cli] ${body}`)
   }
 })()
