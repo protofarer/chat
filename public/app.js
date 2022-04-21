@@ -7,6 +7,7 @@
   const userTextInput = document.querySelector('#userTextInput');
   const sendButton = document.querySelector('#send');
 
+  let userId;
 
   loginButton.addEventListener('click', async () => {
     try {
@@ -84,13 +85,11 @@
       type: 'userSendChat',
       body: userTextInput.value,
       time: Date.now(),
+      sender: userId,
     }
-    ws.send(message);
+    const rawMessage = JSON.stringify(message);
+    ws.send(rawMessage);
     userTextInput.value = '';
-  }
-  function addChat(body) {
-    chatBox.textContent += `\n${body}`;
-    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   function handleEvent(event) {
@@ -115,15 +114,21 @@
     switch (type) {
       case 'system':
         // TODO setup style here
+        userId = message.userId;
         addChat(`${time} ${sender}: ${body}`);
         break;
       case 'userSendChat':
         // TODO setup style here
         addChat(`${time} ${sender}: ${body}`)
+        break;
       default:
         console.log('unhandled message.type');
         break;
     }
+  }
+  function addChat(body) {
+    chatBox.textContent += `\n${body}`;
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
   function addChatFromClient(body) {
     addChat(`${Date.now()} [cli] ${body}`)

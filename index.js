@@ -12,8 +12,6 @@ const WebSocket = require('ws');
 const app = express();
 const sessionUsers = new Map();
 
-const PORT = process.env.PORT;
-
 const sessionParser = session({
   saveUninitialized: false,
   secret: process.env.SECRET,
@@ -73,24 +71,27 @@ wss.on('connection', function (ws, request) {
   sessionUsers.set(userId, ws);
 
   console.log(`user ${userId} connected, current connections: `);
-  console.dir(sessionUsers.keys());
+  console.log(sessionUsers.keys());
   
   const message = {
     type: "system",
     sender: "[room-general]",
     time: Date.now(),
     body: "======== Welcome to kenny.net general chat ========",
+    userId,
   }
   ws.send(JSON.stringify(message));   // this sends to clientws.onmessage
 
 
-  ws.on('message', function (message) {
-    console.log(`Broadcasting message "${message}" from ${userId}`);
+  ws.on('message', function (rawMessage) {
+    const message = JSON.parse(rawMessage);
+    // console.log(message)
+    console.log(`Broadcasting message "${message.body}" from user ${userId}`);
     // TODO make this work
   // TODO send msg to update usersList
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
+        client.send(JSON.stringify(message));
       }
     })
   })
@@ -98,7 +99,7 @@ wss.on('connection', function (ws, request) {
   ws.on('close', function () {
     // ws.send('You left the chat.');
     sessionUsers.delete(userId);
-    console.log('Client disconnected, current connections: '); 
+    console.log(`user ${userId} Client disconnected, current connections: `); 
     console.log(`${sessionUsers.keys()}`);
   })  
 })
@@ -108,6 +109,8 @@ wss.on('close', function(event) {
   // TODO broadcast server/room shutting down
 })
 
-server.listen(PORT, () => {
-  console.log(`listening on https://localhost:${PORT}`)
+const PORT = process.env.PORT;
+const IP = '192.168.1.200';
+server.listen(PORT, IP, () => {
+  console.log(`listening on https://${IP}:${PORT}`)
 });
