@@ -26,7 +26,7 @@ app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Updating session for user $(id})`);
   req.session.userId = id;
-  res.send({ result: 'OK', message: 'Session updated' });
+  res.send({ result: 'OK', message: `You are logged in as user ${id}` });
 });
 
 app.delete('/logout', (req, res) => {
