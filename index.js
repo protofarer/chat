@@ -96,22 +96,26 @@ wss.on('connection', function (ws, request) {
         })
         // TODO send msg to update usersList
         break;
-      case 'close':
-        const message = {
-          type: "system",
-          sender: "[room-general]",
-          time: Date.now(),
-          body: "======== You have left kenny.net general chat ========",
-          userId,
-        }
-        ws.send(JSON.stringify(message));
+      
+      // Below doesn't work because ws is destroyed before client receives msg
+      // So instead hackily let client generate a leaving chat room message in kind
+      // case 'userLeaveChat':
+      //   const closeMessage = {
+      //     type: "system",
+      //     sender: "[room-general]",
+      //     time: Date.now(),
+      //     body: "======== You have left kenny.net general chat ========",
+      //     userId,
+      //   }
+      //   console.log('sending closeMessage')
+      //   ws.send(JSON.stringify(closeMessage));
+      //   break;
       default:
         console.log('Error: Unhandled message type');
     }
   })
 
   ws.on('close', function () {
-
     sessionUsers.delete(userId);
     console.log(`user ${userId} Client disconnected, current connections: `); 
     console.log(`${sessionUsers.keys()}`);

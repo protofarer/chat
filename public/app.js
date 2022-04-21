@@ -11,11 +11,13 @@
   let state = {
     isLoggedIn: false,
     isChatConnected: false,
+    room: '',
   };
   function resetState() {
     state = {
       isLoggedIn: false,
       isChatConnected: false,
+      room: '',
     }
   }
 
@@ -68,7 +70,10 @@
   let ws;
 
   connectButton.addEventListener('click', () => {
-    if (ws) {
+    if (ws) { 
+      // Need this in order to trigger server to send the leave chat room message
+      sendCloseMessage();
+      
       ws.onerror = ws.onopen = ws.onclose = null;
       ws.close();
     } else {
@@ -87,40 +92,29 @@
     if (e.key === 'Enter') sendChatMessage(e);
   })
   
-  function sendChatMessage(e) {
-    if (!ws) {
-      addChatFromClient(`Cannot send message, you are disconnected`);
-      return;
-    }
-    const message = {
-      type: 'userSendChat',
-      body: userTextInput.value,
-      time: Date.now(),
-      sender: userId,
-    }
-    const rawMessage = JSON.stringify(message);
-    ws.send(rawMessage);
-    userTextInput.value = '';
-  }
 
   function handleEvent(event) {
     console.log('cli rcv event.type', event.type)
     switch (event.type) {
       case 'error':
-        console.log('Error setting up websocket:', event);     
+        console.log('WS Error:', event);
+        console.log('WS Error code:', event.code);     
         break;
       case 'open':
         connectButton.innerText = 'Disconnect from chat'
         state.isChatConnected = true;
+        state.room = 'general';
         break;
       case 'close':
         connectButton.innerText = 'Connect to chat'
         if (!state.isChatConnected) {
           addChatFromClient(`You must login to site before connected to chat.`);
         } else {
-          ws = null;
+          addChatFromClient(`========== You have left the chat ========`);
           console.log(event)
-          handleMessage(JSON.parse(event.data));
+          ws = null;
+          state.isChatConnected = false;
+          state.room = '';
         }
         break;
       case 'message':
@@ -137,6 +131,8 @@
     switch (type) {
       case 'system':
         // TODO setup style here
+        console.log(`cli rcvd sys msg`)
+        console.log(message);
         userId = message.userId;
         addChat(`${time} ${sender}: ${body}`);
         break;
@@ -147,13 +143,43 @@
       default:
         console.log('unhandled message.type');
         break;
-    }
+      }
   }
+  
   function addChat(body) {
     chatBox.textContent += `\n${body}`;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
+  
   function addChatFromClient(body) {
     addChat(`${Date.now()} [cli] ${body}`)
   }
+  
+  function sendChatMessage(e) {
+    if (!ws) {
+      addChatFromClient(`Cannot send message, you are disconnected`);
+      return;
+    }
+    const message = {
+      type: 'userSendChat',
+      body: userTextInput.value,
+      time: Date.now(),
+      sender: userId,
+    }
+    const rawMessage = JSON.stringify(message);
+    ws.send(rawMessage);
+    userTextInput.value = '';
+  }
+
+  function sendCloseMessage(e) {
+    const message = {
+      type: 'userLeaveChat',
+      body: null,
+      time: Date.now(),
+      send: userId,
+    };
+    const rawMessage = JSON.stringify(message);
+    ws.send(rawMessage);
+  }
+  
 })()
