@@ -65,13 +65,6 @@ server.on('upgrade', (request, socket, head) => {
   });
 });
 
-function broadcastMessage(message, ws=null) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(message));
-    }
-  })
-}
 
 wss.on('connection', function (ws, request) {
   // Upon connection right before clientws.onopen
@@ -99,7 +92,8 @@ wss.on('connection', function (ws, request) {
     time: Date.now(),
     body: `User ${userId} entered the chat.`
   }
-  broadcastMessage(userEntryMessage);
+  broadcastMessage(userEntryMessage, ws);
+  // TODO send msg to update usersList
 
 
   ws.on('message', function (rawMessage) {
@@ -110,7 +104,6 @@ wss.on('connection', function (ws, request) {
         message.sender = userId;
         console.log(`Broadcasting message "${message.body}" from user ${message.sender}`);  // TODO make this work
         broadcastMessage(message)
-        // TODO send msg to update usersList
         break;
       case 'userLeaveChat':
         // Below doesn't work because ws is destroyed before client receives msg
@@ -127,17 +120,29 @@ wss.on('connection', function (ws, request) {
         message.body = `${userId} has left the chat.`;
         message.sender = "[room-general]";
         broadcastMessage(message);
+        // TODO send msg to update usersList
         break;
       default:
         console.log('Error: Unhandled message type:', message.type);
     }
-  })
 
-  ws.on('close', function () {
-    sessionUsers.delete(userId);
-    console.log(`user ${userId} Client disconnected, current connections: `); 
-    console.log(`${sessionUsers.keys()}`);
-  })  
+    ws.on('close', function () {
+      sessionUsers.delete(userId);
+      console.log(`user ${userId} Client disconnected, current connections: `); 
+      console.log(`${sessionUsers.keys()}`);
+    })
+
+  })
+  function broadcastMessage(message, ws=null) {
+    // WARN the broadcast is not received by the client initiator
+    // despite repo/ws docs stating otherwise, indeed providing
+    // an example for excluding the client initiator from receiving broadcast
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN && client !== ws) {
+        client.send(JSON.stringify(message));
+      }
+    })
+  }
 })
 
 wss.on('close', function(event) {

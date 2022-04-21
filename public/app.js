@@ -145,6 +145,7 @@
         addChat(`${time} ${sender}: ${body}`)
         break;
       case 'userLeaveChat':
+        console.log('does userLeaveChat msg on client ever execute?')
         addChat(`${time} ${sender}: ${body}`);
         break;
       default:
