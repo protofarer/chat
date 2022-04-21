@@ -8,40 +8,60 @@
   const sendButton = document.querySelector('#send');
 
   let userId;
+  let state = {
+    isLoggedIn: false,
+    isChatConnected: false,
+  };
+  function resetState() {
+    state = {
+      isLoggedIn: false,
+      isChatConnected: false,
+    }
+  }
 
   loginButton.addEventListener('click', async () => {
-    try {
-      const response = await fetch(
-        '/login', 
-        { method: 'POST', credentials: 'same-origin', }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        addChat(data.message);
-      } else {
-        throw new Error('Unexpected login response');
+    if (!state.isLoggedIn) {
+      try {
+        const response = await fetch(
+          '/login', 
+          { method: 'POST', credentials: 'same-origin', }
+        );
+  
+        if (response.ok) {
+          const data = await response.json();
+          addChat(data.message);
+          state.isLoggedIn = true;
+        } else {
+          throw new Error('Unexpected login response');
+        }
+  
+      } catch (err) {
+        console.log('Login Error:', err.message);
       }
-
-    } catch (err) {
-      console.log('Login Error:', err.message);
+    } else {
+      addChatFromClient(`You are already logged in!`);
     }
   })
 
   logoutButton.addEventListener('click', async () => {
-    try {
-      const response = await fetch(
-        '/logout',
-        { method: 'POST', credentials: 'same-origin' }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        addChat(data.message);
-      } else {
-        throw new Error('Unexpected logout response');
+    if (state.isLoggedIn) {
+      try {
+        const response = await fetch(
+          '/logout',
+          { method: 'POST', credentials: 'same-origin' }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          addChat(data.message);
+          state.isLoggedIn = false;
+        } else {
+          throw new Error('Unexpected logout response');
+        }
+      } catch (err) {
+        console.log('Logout error:', err.message);
       }
-    } catch (err) {
-      console.log('Logout error:', err.message);
+    } else {
+      addChatFromClient(`You are already logged out!`);
     }
   })
 
@@ -52,20 +72,11 @@
       ws.onerror = ws.onopen = ws.onclose = null;
       ws.close();
     } else {
-      try {
-        ws = new WebSocket(`wss://${location.host}`);
-        
-        ws.addEventListener('open', handleEvent);
-        ws.addEventListener('message', handleEvent);
-        ws.addEventListener('error', () => addChatFromClient(`WebSocket error`));
-        ws.addEventListener('close', () => {
-          connectButton.innerText = 'Connect to chat'
-          addChatFromClient(`You have left the chat.`);
-          ws = null;
-        })
-      } catch (err) {
-        console.log('Error setting up websocket:', err);
-      }
+      ws = new WebSocket(`wss://${location.host}`);
+      ws.addEventListener('open', handleEvent);
+      ws.addEventListener('message', handleEvent);
+      ws.addEventListener('error', handleEvent);
+      ws.addEventListener('close', handleEvent);
     }
   });
 
@@ -95,14 +106,26 @@
   function handleEvent(event) {
     console.log('cli rcv event.type', event.type)
     switch (event.type) {
+      case 'error':
+        console.log('Error setting up websocket:', event);     
+        break;
       case 'open':
         connectButton.innerText = 'Disconnect from chat'
-        addChatFromClient(`You have entered the chat`);
-        // addChat(`${Date.now()} [cli] You have entered the chat.`);
+        state.isChatConnected = true;
+        break;
+      case 'close':
+        connectButton.innerText = 'Connect to chat'
+        if (!state.isChatConnected) {
+          addChatFromClient(`You must login to site before connected to chat.`);
+        } else {
+          ws = null;
+          console.log(event)
+          handleMessage(JSON.parse(event.data));
+        }
         break;
       case 'message':
-          handleMessage(JSON.parse(event.data));
-      break;
+        handleMessage(JSON.parse(event.data));
+        break;
       default:
         console.log('Unhandled event.type')
     }

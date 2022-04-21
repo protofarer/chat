@@ -66,7 +66,7 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 wss.on('connection', function (ws, request) {
-  // Upon connection
+  // Upon connection right before clientws.onopen
   const userId = request.session.userId;
   sessionUsers.set(userId, ws);
 
@@ -86,18 +86,32 @@ wss.on('connection', function (ws, request) {
   ws.on('message', function (rawMessage) {
     const message = JSON.parse(rawMessage);
     // console.log(message)
-    console.log(`Broadcasting message "${message.body}" from user ${userId}`);
-    // TODO make this work
-  // TODO send msg to update usersList
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(message));
-      }
-    })
+    switch (message.type) {
+      case 'userSendChat':
+        console.log(`Broadcasting message "${message.body}" from user ${userId}`);  // TODO make this work
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(message));
+          }
+        })
+        // TODO send msg to update usersList
+        break;
+      case 'close':
+        const message = {
+          type: "system",
+          sender: "[room-general]",
+          time: Date.now(),
+          body: "======== You have left kenny.net general chat ========",
+          userId,
+        }
+        ws.send(JSON.stringify(message));
+      default:
+        console.log('Error: Unhandled message type');
+    }
   })
 
   ws.on('close', function () {
-    // ws.send('You left the chat.');
+
     sessionUsers.delete(userId);
     console.log(`user ${userId} Client disconnected, current connections: `); 
     console.log(`${sessionUsers.keys()}`);
@@ -112,5 +126,10 @@ wss.on('close', function(event) {
 const PORT = process.env.PORT;
 const IP = '192.168.1.200';
 server.listen(PORT, IP, () => {
-  console.log(`listening on https://${IP}:${PORT}`)
+  console.log(`listening on https://${IP}:${PORT}`);
 });
+
+// WARN make this work
+wss.on('listen', () => {
+  console.log(`listening on wss://${IP}:${PORT}`);
+})
