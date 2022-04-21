@@ -59,7 +59,7 @@
         ws.addEventListener('error', () => addChat('WebSocket error'));
         ws.addEventListener('close', () => {
           connectButton.innerText = 'Connect to chat'
-          addChat('[client] You have left the chat.')
+          addChat(`${Date.now()} [cli] You have left the chat.`);
           ws = null;
         })
       } catch (err) {
@@ -77,7 +77,7 @@
   
   function sendChatMessage(e) {
     if (!ws) {
-      addChat('[client] Cannot send message, you are disconnected');
+      addChat(`${Date.now()}[cli] Cannot send message, you are disconnected`);
       return;
     }
     const message = {
@@ -98,7 +98,7 @@
     switch (event.type) {
       case 'open':
         connectButton.innerText = 'Disconnect from chat'
-        addChat('[client] You have entered the chat.');
+        addChat(`${Date.now()} [cli] You have entered the chat.`);
         break;
       case 'message':
           handleMessage(JSON.parse(event.data));
@@ -110,14 +110,15 @@
   }
   function handleMessage(message) {
     console.log(message)
-    switch (message.type) {
+    let { type, sender, time, body } = message;
+    switch (type) {
       case 'system':
         // TODO setup style here
-        addChat(`${message.time} [sys]: ${message.body}`);
+        addChat(`${time} ${sender}: ${body}`);
         break;
       case 'userSendChat':
         // TODO setup style here
-        addChat(`${message.time} ${message.userHandle}: ${message.body}`)
+        addChat(`${time} ${sender}: ${body}`)
       default:
         console.log('unhandled message.type');
         break;

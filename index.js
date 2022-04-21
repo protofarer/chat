@@ -27,7 +27,7 @@ app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
-  res.send({ result: 'OK', message: `[sys] You are logged in as user ${id}.` });
+  res.send({ result: 'OK', message: `${Date.now()} [knet] You are logged in as user ${id}.` });
 });
 
 app.post('/logout', (req, res) => {
@@ -37,7 +37,7 @@ app.post('/logout', (req, res) => {
     if (ws) {
       ws.close();
     }
-    res.send({ result: 'OK', message: '[sys] You are logged out.' });
+    res.send({ result: 'OK', message: '[knet] You are logged out.' });
   });
 });
 
@@ -77,9 +77,9 @@ wss.on('connection', function (ws, request) {
   
   const message = {
     type: "system",
-    body: "======== Welcome to kenny.net general chat ========",
-    name: "kenny.net",
+    sender: "[sys-genchat]",
     time: Date.now(),
+    body: "======== Welcome to kenny.net general chat ========",
   }
   ws.send(JSON.stringify(message));   // this sends to clientws.onmessage
 
@@ -99,7 +99,7 @@ wss.on('connection', function (ws, request) {
     // ws.send('You left the chat.');
     sessionUsers.delete(userId);
     console.log('Client disconnected, current connections: '); 
-    console.log(`${sessionUsers}`);
+    console.log(`${sessionUsers.keys()}`);
   })  
 })
 
