@@ -111,7 +111,7 @@
       case 'close':
         // WS can send a close event on an attempted new ws
         // even if never connecting, thus the close event handler must address
-        if (!isLoggedIn) {                  // close events when not logged in
+        if (!state.isLoggedIn) {                  // close events when not logged in
           addChatFromClient(`You must login to site before connected to chat.`);
         } else if (isChatConnected) {       // close events when logged in
           connectButton.innerText = 'Connect to chat'
