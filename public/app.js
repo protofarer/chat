@@ -150,7 +150,7 @@
   }
   
   function addChat(body) {
-    chatBox.textContent += `\n${body}`;
+    chatBox.innerHTML += `${body}<br />`;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
   

@@ -15,7 +15,22 @@
   --actionableSymbolColor: gold;
   --colorTransparent: rgba(0,0,0,0);  
 
+  --pageBackground: black;
   --bodyFont: Arial, sans-serif;
+}
+html {
+  /* removed per https://css-tricks.com/accessible-font-sizing-explained/ */
+  /* font-size: 16px; */
+  box-sizing: border-box;
+  background-color: var(--pageBackground);
+}
+
+/* https://css-tricks.com/box-sizing/ */
+/* default yet overrideable border-box box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
 }
 
 body {
@@ -26,7 +41,12 @@ body {
 
 button {
   font-family: var(--bodyFont);
-  color: var(--chaosLineColor-bright);
+}
+
+button:hover, button:focus {
+  outline: 5px double var(--focusColor);
+  color: var(--focusColor);
+  font-weight: bolder;
 }
 
 #topContainer {
@@ -43,26 +63,29 @@ button {
 #menuContainer {
   display: flex;
   flex-flow: row nowrap;
-  gap: 10px;
+  /* gap: 10px; */
+  border: 1px dashed red;
 }
 
 #menu {
-  min-height: 30px;
-  min-width: 400px;
   padding: 0;
   margin: 0;
+  min-height: 40px;
+  min-width: 400px;
   border: 6px double var(--orderLineColor-dull);
-
-  flex-grow: 1;
-
+  
+  flex-grow: 4;
+  /* flex-shrink: 1; */
+  
   display: flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
-  gap: 5px;
+  /* gap: 5px; */
 }
 
 #menu > button {
-  padding: 0 15px 0 15px;
+  margin: 0;
+  padding: 0;
   color: var(--orderLineColor);
   background-color: var(--colorTransparent);
 
@@ -88,28 +111,37 @@ button {
   gap: 10px;
 }
 
-#chatBoxSpacer {
+.chatBoxSpacer {
   margin: 0;
   padding: 0;
   display: inline-block;
   min-width: 400px;
   height: 1px;
   /* border-bottom: 2px dashed var(--harmonyLineColor-dull); */
-  flex-grow: 1;
+  flex-grow: 4;
+  border-bottom: 1px solid orange;
 }
 
-#usersListSpacer {
+.usersListSpacer {
   margin: 0;
   padding: 0;
-  display: inline-block;
   min-width: 150px;
-  flex-grow: 0;
+  flex-grow: 1;
+  border: 1px solid orange;
+  
+  display: flex;
+}
+
+
+.concentricSquares {
+  margin: 5px;
+  flex-grow: 1;
+  border: 1px solid orange;
 }
 
 #chatContainer {
   display: flex;
   flex-flow: row nowrap;
-  gap: 10px;
   border: 6px double var(--harmonyLineColor-dull);
   border-radius: 6px;
 }
@@ -117,14 +149,17 @@ button {
 /* LOL the double borders pad the element */
 #chatBox {
   margin: 0;
-  color: var(--chaosLineColor-bright);
-  font-family: var(--bodyFont);
   padding: 5px;
   height: 400px;
+  line-height: 1.3;
   min-width: 400px;
-  overflow: scroll;
+  color: var(--chaosLineColor-bright);
+  font-family: var(--bodyFont);
+  overflow-wrap: break-word;
+  overflow-y: scroll;
+  border-right: 5px dotted var(--harmonyLineColor-dull);
 
-  flex-grow: 1;
+  flex-grow: 4;
 }
 
 #chatUsersList {
@@ -133,19 +168,20 @@ button {
   height: 400px;
   min-width: 150px;
   overflow: scroll;
-  border-left: 5px dotted var(--harmonyLineColor-dull);
-  flex-grow: 0;
+  flex-grow: 1;
+  border: 3px dotted red;
 }
 
 #inputPanel {
   margin: 0;
   padding: 0;
   /* min-width: 400px; */
+  min-height: 35px;
   flex-grow: 1;
 
   display: flex;
   flex-flow: row nowrap;
-  gap: 10px;
+  /* gap: 10px; */
 
   border: 8px double var(--chaosLineColor-dull);
   border-radius: 23px;
@@ -155,13 +191,14 @@ button {
 #inputPanel > input {
   margin: 0;
   padding: 0;
+  min-height: 25px;
+  min-width: 400px;
+  border: none;
   color: var(--focusColor);
   font-weight: bolder;
   background-color: var(--colorTransparent);
-  min-height: 25px;
-  min-width: 400px;
-  flex-grow: 1;
-  border: none;
+  flex-grow: 4;
+  border-right: 5px dotted var(--chaosLineColor-dull);
 }
 #inputPanel > input:hover,
 #inputPanel > input:focus {
@@ -171,16 +208,10 @@ button {
 #inputPanel > button {
   margin: 0;
   min-width: 150px;
+  border: none;  
   color: var(--chaosLineColor);
   font-size: larger;
   font-weight: bolder;
-  border: none;  
   background-color: var(--colorTransparent);
-  border-left: 5px dotted var(--chaosLineColor-dull);
-}
-
-button:hover, button:focus {
-  outline: 5px double var(--focusColor);
-  color: var(--focusColor);
-  font-weight: bolder;
+  flex-grow: 1;
 }
