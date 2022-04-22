@@ -64,7 +64,7 @@ button:hover, button:focus {
   display: flex;
   flex-flow: row nowrap;
   /* gap: 10px; */
-  border: 1px dashed red;
+  /* border: 1px dashed red; */
 }
 
 #menu {
@@ -157,6 +157,7 @@ button:hover, button:focus {
   font-family: var(--bodyFont);
   overflow-wrap: break-word;
   overflow-y: scroll;
+  hyphens: auto;
   border-right: 5px dotted var(--harmonyLineColor-dull);
 
   flex-grow: 4;
@@ -169,7 +170,7 @@ button:hover, button:focus {
   min-width: 150px;
   overflow: scroll;
   flex-grow: 1;
-  border: 3px dotted red;
+  /* border: 3px dotted red; */
 }
 
 #inputPanel {
