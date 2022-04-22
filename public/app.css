@@ -1,17 +1,21 @@
 :root {
-  --actionableSymbolColor: gold;
   --harmonyLineColor: hsl(125, 80%, 40%);
   --harmonyLineColor-bright: hsl(125, 100%, 60%);
   --harmonyLineColor-dull: hsl(125, 50%, 40%);
-  --chaosLineColor: hsl(0, 80%, 40%);
+
+  --chaosLineColor: hsl(0, 80%, 55%);
   --chaosLineColor-bright: hsl(0, 100%, 60%);
   --chaosLineColor-dull: hsl(0, 70%, 40%);
+
   --orderLineColor: hsl(180, 80%, 40%);
   --orderLineColor-bright: hsl(180, 100%, 60%);
   --orderLineColor-dull: hsl(180, 50%, 40%);
+
   --focusColor: gold;
-  --bodyFont: Roboto;
+  --actionableSymbolColor: gold;
   --colorTransparent: rgba(0,0,0,0);  
+
+  --bodyFont: Arial, sans-serif;z
 }
 
 body {
@@ -22,7 +26,7 @@ body {
 
 button {
   font-family: var(--bodyFont);
-  color: var(--harmonyLineColor-bright);
+  color: var(--chaosLineColor-bright);
 }
 
 #topContainer {
@@ -48,7 +52,6 @@ button {
   padding: 0;
   margin: 0;
   border: 6px double var(--orderLineColor-dull);
-  border-radius: 10px;
 
   flex-grow: 1;
 
@@ -108,12 +111,15 @@ button {
   flex-flow: row nowrap;
   gap: 10px;
   border: 6px double var(--harmonyLineColor-dull);
-  border-radius: 10px;
+  border-radius: 6px;
 }
+
 /* LOL the double borders pad the element */
 #chatBox {
   margin: 0;
-  padding: 0;
+  color: var(--chaosLineColor-bright);
+  font-family: var(--bodyFont);
+  padding: 5px;
   height: 400px;
   min-width: 400px;
   overflow: scroll;
@@ -125,7 +131,7 @@ button {
   margin: 0;
   padding: 0;
   height: 400px;
-  min-width: 100px;
+  min-width: 150px;
   overflow: scroll;
   border-left: 5px dotted var(--harmonyLineColor-dull);
   flex-grow: 0;
@@ -142,7 +148,7 @@ button {
   gap: 10px;
 
   border: 8px double var(--chaosLineColor-dull);
-  border-radius: 10px;
+  border-radius: 23px;
   /* border: 1px solid yellowgreen; */
 }
 
@@ -164,8 +170,8 @@ button {
 
 #inputPanel > button {
   margin: 0;
-  min-width: 100px;
-  color: red;
+  min-width: 150px;
+  color: var(--chaosLineColor);
   font-size: larger;
   font-weight: bolder;
   border: none;  
