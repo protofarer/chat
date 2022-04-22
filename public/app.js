@@ -1,7 +1,6 @@
 (() => {
   const loginButton = document.querySelector('#login');
   const connectButton = document.querySelector('#connect');
-  const logoutButton = document.querySelector('#logout');
   const chatBox = document.querySelector('#chatBox');
   const usersList = document.querySelector('#chatUsersList');
   const userTextInput = document.querySelector('#userTextInput');
@@ -24,21 +23,18 @@
         
         if (response.ok) {
           const data = await response.json();
-          addChat(data.message);
+          const event = {};
+          event.data = JSON.stringify(data);
+          handleMessage(event);
           state.isLoggedIn = true;
+          loginButton.innerText = 'LOGOUT';
         } else {
           throw new Error('Unexpected login response');
         }
       } catch (err) {
-        console.log('Login Error:', err.message);
+        console.log('Login Error:', err);
       }
     } else {
-      addChatFromClient(`You are already logged in!`);
-    }
-  });
-
-  logoutButton.addEventListener('click', async () => {
-    if (state.isLoggedIn) {
       try {
         const response = await fetch(
           '/logout',
@@ -46,19 +42,20 @@
         );
         if (response.ok) {
           const data = await response.json();
-          addChat(data.message);
+          const event = {};
+          event.data = JSON.stringify(data);
+          handleMessage(event);
+          // addChat(data.message);
           state.isLoggedIn = false;
+          loginButton.innerText = 'LOGIN';
         } else {
           throw new Error('Unexpected logout response');
         }
       } catch (err) {
         console.log('Logout error:', err.message);
       }
-    } else {
-      addChatFromClient(`You are already logged out!`);
     }
   });
-
 
   connectButton.addEventListener('click', () => {
     // Is a toggle button, thus cannot attempt a disconnect when already disconnected
@@ -72,17 +69,17 @@
       // TMP fix wip
       // BUG? using removeEL's causes the client to not receive
       // an event.type close that triggers the "left chat" chatbox msg.
-      // ws.removeEventListener('open', handleEvent);
-      // ws.removeEventListener('message', handleEvent);
-      // ws.removeEventListener('error', handleEvent);
-      // ws.removeEventListener('close', handleEvent);
+      // ws.removeEventListener('open', handleWSEvents);
+      // ws.removeEventListener('message', handleWSEvents);
+      // ws.removeEventListener('error', handleWSEvents);
+      // ws.removeEventListener('close', handleWSEvents);
       ws.close();
     } else {
       ws = new WebSocket(`wss://${location.host}`);
-      ws.addEventListener('open', handleEvent);
+      ws.addEventListener('open', handleWSEvents);
       ws.addEventListener('message', handleMessage);
-      ws.addEventListener('error', handleEvent);
-      ws.addEventListener('close', handleEvent);
+      ws.addEventListener('error', handleWSEvents);
+      ws.addEventListener('close', handleWSEvents);
     }
   });
 
@@ -95,8 +92,8 @@
   })
   
 
-  function handleEvent(event) {
-    // Dispatches socket event actions
+  function handleWSEvents(event) {
+    // Dispatches websocket event actions
     console.log('cli rcv event.type', event.type)
     switch (event.type) {
       case 'error':
@@ -114,7 +111,15 @@
         if (!state.isLoggedIn) {              // handle close events when not logged in
           addChatFromClient(`You must login to site before connected to chat.`);
         } else if (state.isChatConnected) {   // handle close events when logged in
-          addChat(`${Date.now()} [cli] ======== You left the chat. Bye! ========`);
+          const leaveMessage = {
+            type: 'system',
+            sender: 'cli',
+            time: new Date(),
+            body: `======== You left the chat. Bye! ========`
+          }
+          let event = {};
+          event.data = JSON.stringify(leaveMessage)
+          handleMessage(event);
           state.isChatConnected = false;
           state.room = '';
           connectButton.innerText = 'Connect to chat'
@@ -122,22 +127,30 @@
         }
         break;
       default:
-        console.log('Unhandled event.type')
+        console.log('Unhandled event.type:', event.type)
     }
   }
   
   function handleMessage(event) {
+    // Formats and acts on messages from server
+
+    // TODO check and handle event typeof (server message passing)
+    // TODO check and handle object typeof (local message passing)
     const message = JSON.parse(event.data);
     // Dispatches messages from server
     let { type, sender, time, body } = message;
+    time = new Date(time).toLocaleTimeString(
+      'en-US', 
+      { timeZoneName: 'short' }
+    );
     switch (type) {
       case 'system':
         // TODO setup style around here
-        addChat(`${time} ${sender}: ${body}`);
+        addChat(`(${time}) <strong>[${sender}]</strong>: ${body}`);
         break;
       case 'userSendChat':
         // TODO setup style around here
-        addChat(`${time} ${sender}: ${body}`)
+        addChat(`(${time}) <strong>${sender}</strong>: ${body}`)
         break;
       // TMP fix wip
       // case 'userLeaveChat':
@@ -150,6 +163,9 @@
   }
   
   function addChat(body) {
+    // TODO concatenates to existing state.chat
+    // chatBox.innerHTML updated to state.chat every time this
+    // fn invoked.
     chatBox.innerHTML += `${body}<br />`;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
