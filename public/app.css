@@ -15,7 +15,7 @@
   --actionableSymbolColor: gold;
   --colorTransparent: rgba(0,0,0,0);  
 
-  --bodyFont: Arial, sans-serif;z
+  --bodyFont: Arial, sans-serif;
 }
 
 body {
@@ -102,7 +102,7 @@ button {
   margin: 0;
   padding: 0;
   display: inline-block;
-  min-width: 100px;
+  min-width: 150px;
   flex-grow: 0;
 }
 
