@@ -1,0 +1,180 @@
+:root {
+  --actionableSymbolColor: gold;
+  --harmonyLineColor: hsl(125, 80%, 40%);
+  --harmonyLineColor-bright: hsl(125, 100%, 60%);
+  --harmonyLineColor-dull: hsl(125, 50%, 40%);
+  --chaosLineColor: hsl(0, 80%, 40%);
+  --chaosLineColor-bright: hsl(0, 100%, 60%);
+  --chaosLineColor-dull: hsl(0, 70%, 40%);
+  --orderLineColor: hsl(180, 80%, 40%);
+  --orderLineColor-bright: hsl(180, 100%, 60%);
+  --orderLineColor-dull: hsl(180, 50%, 40%);
+  --focusColor: gold;
+  --bodyFont: Roboto;
+  --colorTransparent: rgba(0,0,0,0);  
+}
+
+body {
+  font-family: var(--bodyFont);
+  background-color: black;
+  color: var(--harmonyLineColor-bright);
+}
+
+button {
+  font-family: var(--bodyFont);
+  color: var(--harmonyLineColor-bright);
+}
+
+#topContainer {
+  padding: 5px;
+  margin: 0;
+
+  display: flex;
+  flex-flow: column nowrap;
+  /* align-items: ; */
+  gap: 10px;
+  /* border: 1px solid green; */
+}
+
+#menuContainer {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 10px;
+}
+
+#menu {
+  min-height: 30px;
+  min-width: 400px;
+  padding: 0;
+  margin: 0;
+  border: 6px double var(--orderLineColor-dull);
+  border-radius: 10px;
+
+  flex-grow: 1;
+
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: flex-start;
+  gap: 5px;
+}
+
+#menu > button {
+  padding: 0 15px 0 15px;
+  color: var(--orderLineColor);
+  background-color: var(--colorTransparent);
+
+  flex-grow: 1;
+  border-right: 3px dotted var(--orderLineColor-dull);
+  border-left: none;
+  border-top: none;
+  border-bottom: none;
+}
+
+#menu > button:last-of-type {
+  border-right: none;
+}
+#menu > button:first-of-type {
+  border-left: none;
+}
+
+#spacerContainer {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 10px;
+}
+
+#chatBoxSpacer {
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  min-width: 400px;
+  height: 1px;
+  /* border-bottom: 2px dashed var(--harmonyLineColor-dull); */
+  flex-grow: 1;
+}
+
+#usersListSpacer {
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  min-width: 100px;
+  flex-grow: 0;
+}
+
+#chatContainer {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 10px;
+  border: 6px double var(--harmonyLineColor-dull);
+  border-radius: 10px;
+}
+/* LOL the double borders pad the element */
+#chatBox {
+  margin: 0;
+  padding: 0;
+  height: 400px;
+  min-width: 400px;
+  overflow: scroll;
+
+  flex-grow: 1;
+}
+
+#chatUsersList {
+  margin: 0;
+  padding: 0;
+  height: 400px;
+  min-width: 100px;
+  overflow: scroll;
+  border-left: 5px dotted var(--harmonyLineColor-dull);
+  flex-grow: 0;
+}
+
+#inputPanel {
+  margin: 0;
+  padding: 0;
+  /* min-width: 400px; */
+  flex-grow: 1;
+
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 10px;
+
+  border: 8px double var(--chaosLineColor-dull);
+  border-radius: 10px;
+  /* border: 1px solid yellowgreen; */
+}
+
+#inputPanel > input {
+  margin: 0;
+  padding: 0;
+  color: var(--focusColor);
+  font-weight: bolder;
+  background-color: var(--colorTransparent);
+  min-height: 25px;
+  min-width: 400px;
+  flex-grow: 1;
+  border: none;
+}
+#inputPanel > input:hover,
+#inputPanel > input:focus {
+  outline: 5px double var(--focusColor);
+}
+
+#inputPanel > button {
+  margin: 0;
+  min-width: 100px;
+  color: red;
+  font-size: larger;
+  font-weight: bolder;
+  border: none;  
+  background-color: var(--colorTransparent);
+  border-left: 5px dotted var(--chaosLineColor-dull);
+}
+
+button:hover, button:focus {
+  outline: 5px double var(--focusColor);
+  color: var(--focusColor);
+  font-weight: bolder;
+}

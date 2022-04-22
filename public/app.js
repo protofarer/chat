@@ -1,6 +1,6 @@
 (() => {
   const loginButton = document.querySelector('#login');
-  const connectButton = document.querySelector('#connectChat');
+  const connectButton = document.querySelector('#connect');
   const logoutButton = document.querySelector('#logout');
   const chatBox = document.querySelector('#chatBox');
   const usersList = document.querySelector('#chatUsersList');

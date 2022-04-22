@@ -5,82 +5,27 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any">
+  <link rel="stylesheet" href="app.css">
   <title>WebSockets Toy App</title>
-  <style>
-    body {
-      background-color: black;
-      color: rgb(255, 0, 230);
-    }
-    #topContainer {
-      padding: 5px;
-
-      display: flex;
-      flex-flow: column nowrap;
-      gap: 3px;
-      /* border: 1px solid green; */
-    }
-
-    #menu {
-      padding: 5px;
-      display: flex;
-      flex-flow: row nowrap;
-      gap: 3px;
-      border: 1px solid blue;
-    }
-
-    #chatContainer {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-betnwee;
-      gap: 3px;
-    }
-
-    #chatBox {
-      height: 400px;
-      min-width: 300px;
-      overflow: scroll;
-      border: 1px solid red;
-
-      flex-grow: 1;
-    }
-
-    #chatUsersList {
-      height: 400px;
-      min-width: 100px;
-      overflow: scroll;
-      border: 1px solid blueviolet;
-
-      flex-grow: 0;
-    }
-
-    #inputPanel {
-      padding: 5px;
-      display: flex;
-      flex-flow: row nowrap;
-      gap: 3px;
-
-      border: 1px solid yellowgreen;
-    }
-
-    #userTextInput {
-      min-width: 100px;
-      max-width: 500px;
-      flex-grow: 1;
-    }
-  </style>
 </head>
 <body>
   <div id="topContainer">
-    <div id="menu">
-      <button id="login">
-        Login
-      </button>
-      <button id="logout">
-        Logout
-      </button> | 
-      <button id="connectChat">
-        Connect to chat
-      </button>
+    <div id="menuContainer">
+      <menu id="menu">
+        <button id="login">
+          Login
+        </button>
+        <button id="logout">
+          Logout
+        </button>
+        <button id="connect">
+          Connect to chat
+        </button>
+      </menu>
+      <div id="usersListSpacer"></div>
+    </div>
+    <div id="spacerContainer">
+      <div id="chatBoxSpacer"></div><div id="usersListSpacer"></div>
     </div>
     <div id="chatContainer">
       <pre id="chatBox"></pre>
@@ -88,7 +33,7 @@
     </div>
     <div id="inputPanel">
       <input id="userTextInput" type="text" />
-      <button id="send" type="submit">Send</button>
+      <button id="send" type="submit">SEND</button>
     </div>
   </div>
   <script src="app.js"></script>
