@@ -25,10 +25,13 @@ app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
-  res.send({ 
+  res.send(JSON.stringify({ 
     result: 'OK', 
-    message: `${Date.now()} [knet] You logged in as user ${id}.` 
-  });
+    type: 'system',
+    sender: 'knet',
+    body: `You logged in as user ${id}.`,
+    time: new Date()
+  }));
 });
 
 app.post('/logout', (req, res) => {
@@ -38,10 +41,13 @@ app.post('/logout', (req, res) => {
     if (ws) {
       ws.close();
     }
-    res.send({ 
-      result: 'OK', 
-      message: `${Date.now()} [knet] You are logged out.`, 
-    });
+  res.send(JSON.stringify({ 
+    result: 'OK', 
+    type: 'system',
+    sender: 'knet',
+    body: `You are logged out.`,
+    time: new Date(),
+  }));
   });
 });
 
@@ -83,8 +89,8 @@ wss.on('connection', function (ws, request) {
   // Send welcome message to user entering room
   const userWelcomeMessage = {
     type: "system",
-    sender: "[room-general]",
-    time: Date.now(),
+    sender: "room-general",
+    time: new Date(),
     body: "======== Welcome to kenny.net general chat ========",
   };
   ws.send(JSON.stringify(userWelcomeMessage));   // this sends to clientws.onmessage
@@ -93,8 +99,8 @@ wss.on('connection', function (ws, request) {
   // console.log(`Broadcasting user ${userId} entrance`);
   const userEntryMessage = {
     type: "system",
-    sender: "[room-genera]l",
-    time: Date.now(),
+    sender: "room-general",
+    time: new Date(),
     body: `User ${userId} entered the chat.`
   }
   broadcastMessage(userEntryMessage, ws);
@@ -119,8 +125,8 @@ wss.on('connection', function (ws, request) {
   ws.on('close', function () {
     const roomUserLeft = {
       type: "system",
-      sender: "[room-general]",
-      time: Date.now(),
+      sender: "room-general",
+      time: new Date(),
       body: `User ${userId} left the chat.`
     };
     broadcastMessage(roomUserLeft);
