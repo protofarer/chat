@@ -121,12 +121,14 @@ wss.on('connection', function (ws, request) {
         console.log('Error: Unhandled message type:', message.type);
     }
 
-    ws.on('close', function () {
-      sessionUsers.delete(userId);
-      console.log(`user ${userId} Client disconnected, current connections: `); 
-      console.log(`${sessionUsers.keys()}`);
-    })
-
+    
+  })
+  
+  ws.on('close', function () {
+    // ?TODO send user the goodbye message
+    sessionUsers.delete(userId);
+    console.log(`user ${userId} Client disconnected, current connections: `); 
+    console.log(`${sessionUsers.keys()}`);
   })
 
   function broadcastMessage(message, ws=null) {
