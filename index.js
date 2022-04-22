@@ -81,13 +81,13 @@ wss.on('connection', function (ws, request) {
   console.log(sessionUsers.keys());
   
   // Send welcome message to user entering room
-  const welcomeMessage = {
+  const userWelcomeMessage = {
     type: "system",
     sender: "[room-general]",
     time: Date.now(),
     body: "======== Welcome to kenny.net general chat ========",
-  }
-  ws.send(JSON.stringify(welcomeMessage));   // this sends to clientws.onmessage
+  };
+  ws.send(JSON.stringify(userWelcomeMessage));   // this sends to clientws.onmessage
   
   // Broadcast entering user to clients
   // console.log(`Broadcasting user ${userId} entrance`);
@@ -109,23 +109,23 @@ wss.on('connection', function (ws, request) {
         console.log(`Broadcasting message "${message.body}" from user ${message.sender}`);  // TODO make this work
         broadcastMessage(message)
         break;
-      case 'userLeaveChat':
-        message.body = `${userId} has left the chat.`;
-        message.sender = "[room-general]";
-        broadcastMessage(message);
-        
-        // TODO send msg to update usersList
-        
-        break;
       default:
         console.log('Error: Unhandled message type:', message.type);
     }
 
     
   })
-  
+
   ws.on('close', function () {
-    // ?TODO send user the goodbye message
+    const roomUserLeft = {
+      type: "system",
+      sender: "[room-general]",
+      time: Date.now(),
+      body: `User ${userId} left the chat.`
+    };
+    broadcastMessage(roomUserLeft);
+
+    // TODO send msg to update usersList
     sessionUsers.delete(userId);
     console.log(`user ${userId} Client disconnected, current connections: `); 
     console.log(`${sessionUsers.keys()}`);

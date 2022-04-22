@@ -64,9 +64,12 @@
     // Is a toggle button, thus cannot attempt a disconnect when already disconnected
     // As a result this condition isn't handled in the event handler 
     if (ws) { 
+      // TMP possible fix
       // Need this in order to trigger server to send the leave chat room message
-      notifyLeave();
+      // notifyLeave();
+
       ws.onerror = ws.onopen = ws.onclose = null;
+      // TMP fix wip
       // BUG? using removeEL's causes the client to not receive
       // an event.type close that triggers the "left chat" chatbox msg.
       // ws.removeEventListener('open', handleEvent);
@@ -77,7 +80,7 @@
     } else {
       ws = new WebSocket(`wss://${location.host}`);
       ws.addEventListener('open', handleEvent);
-      ws.addEventListener('message', handleEvent);
+      ws.addEventListener('message', handleMessage);
       ws.addEventListener('error', handleEvent);
       ws.addEventListener('close', handleEvent);
     }
@@ -93,6 +96,7 @@
   
 
   function handleEvent(event) {
+    // Dispatches socket event actions
     console.log('cli rcv event.type', event.type)
     switch (event.type) {
       case 'error':
@@ -106,26 +110,25 @@
         break;
       case 'close':
         // WS sends a close event even when a new ws object fails to connect
-        // Thus this must:
+        // Thus this case block must:
         if (!state.isLoggedIn) {              // handle close events when not logged in
           addChatFromClient(`You must login to site before connected to chat.`);
         } else if (state.isChatConnected) {   // handle close events when logged in
-          addChatFromClient(`========== You have left the chat ========`);
+          addChat(`${Date.now()} [cli] ======== You left the chat. Bye! ========`);
           state.isChatConnected = false;
           state.room = '';
           connectButton.innerText = 'Connect to chat'
           ws = null;
         }
         break;
-      case 'message':
-        handleMessage(JSON.parse(event.data));
-        break;
       default:
         console.log('Unhandled event.type')
     }
   }
   
-  function handleMessage(message) {
+  function handleMessage(event) {
+    const message = JSON.parse(event.data);
+    // Dispatches messages from server
     let { type, sender, time, body } = message;
     switch (type) {
       case 'system':
@@ -136,9 +139,10 @@
         // TODO setup style around here
         addChat(`${time} ${sender}: ${body}`)
         break;
-      case 'userLeaveChat':
-        addChat(`${time} ${sender}: ${body}`);
-        break;
+      // TMP fix wip
+      // case 'userLeaveChat':
+      //   addChat(`${time} ${sender}: ${body}`);
+      //   break;
       default:
         console.log('Unhandled message.type');
         break;
@@ -169,7 +173,7 @@
     userTextInput.value = '';
   }
 
-  function notifyLeave(e) {
+  function notifyLeave(e){
     // Notify WSServer connection is closing
     // so it can in turn notify the room.
     const message = {
