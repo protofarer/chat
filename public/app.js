@@ -83,7 +83,9 @@
     }
   });
 
-  sendButton.addEventListener('click', sendChatMessage)
+  sendButton.addEventListener('click', (e) => {
+    sendChatMessage(e);
+  })
   // CSDR better way to do this without making it a form... \
   // or should it be a form? eg POST to route with userId and data?...
   // how does a form accomplish this?
@@ -179,13 +181,15 @@
       addChatFromClient(`Cannot send message, you are disconnected`);
       return;
     }
-    const message = {
-      type: 'userSendChat',
-      body: userTextInput.value,
-      time: Date.now(),
+    if (userTextInput.value.trim().length > 0) {
+      const message = {
+        type: 'userSendChat',
+        body: userTextInput.value,
+        time: new Date(),
+      }
+      const rawMessage = JSON.stringify(message);
+      ws.send(rawMessage);
     }
-    const rawMessage = JSON.stringify(message);
-    ws.send(rawMessage);
     userTextInput.value = '';
   }
 
