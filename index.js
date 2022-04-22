@@ -121,7 +121,7 @@ wss.on('connection', function (ws, request) {
     type: "system",
     sender: "room-general",
     time: new Date(),
-    body: `user ${handle} entered the chat.`
+    body: `${handle} entered the chat.`
   }
   broadcastMessage(userEntryMessage, ws);
   
@@ -147,7 +147,7 @@ wss.on('connection', function (ws, request) {
       type: "system",
       sender: "room-general",
       time: new Date(),
-      body: `user ${handle} left the chat.`
+      body: `${handle} left the chat.`
     };
     broadcastMessage(roomUserLeft);
 
