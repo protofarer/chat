@@ -4,13 +4,32 @@ const express=  require('express');
 const https = require('https');
 const uuid = require('uuid');
 const fs = require('fs');
+
 require('dotenv').config();
 
 const { WebSocketServer } = require('ws');
 const WebSocket = require('ws');
 
 const app = express();
-const sessionUsers = new Map();
+// const sessionUsers = new Map();
+const sessionUsers = {};    // Dictionary, userId as key
+let handleNamePool = [
+  'pikachu',
+  'bulbasaur',
+  'charmander',
+  'mewtwo',
+  'miketyson',
+  'ghostofstevejobs',
+  'kira',
+  'eddie',
+  'guile',
+  'kaztheminotaur',
+  'raistlyn',
+  'woolymammoth',
+  'barney',
+  'ghostofschopenhauer',
+  'ghostofvanhalen'
+];
 
 const sessionParser = session({
   saveUninitialized: false,
@@ -35,7 +54,7 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  const ws = sessionUsers.get(req.session.userId);
+  const ws = sessionUsers[req.session.userId];
   console.log(`Destroying session for user ${req.session.userId }`);
   req.session.destroy(() => {
     if (ws) {
@@ -81,10 +100,11 @@ server.on('upgrade', (request, socket, head) => {
 wss.on('connection', function (ws, request) {
   // Upon connection right before client ws opens
   const userId = request.session.userId;
-  sessionUsers.set(userId, ws);
+  const handle = handleNamePool.splice(Math.floor(Math.random()*handleNamePool.length),1)[0];
+  sessionUsers[userId] = { ws, handle };
 
-  console.log(`user ${userId} connected, current connections: `);
-  console.log(sessionUsers.keys());
+  console.log(`user ${handle} connected, current connections: `);
+  console.log(Object.keys(sessionUsers));
   
   // Send welcome message to user entering room
   const userWelcomeMessage = {
@@ -101,7 +121,7 @@ wss.on('connection', function (ws, request) {
     type: "system",
     sender: "room-general",
     time: new Date(),
-    body: `User ${userId} entered the chat.`
+    body: `user ${handle} entered the chat.`
   }
   broadcastMessage(userEntryMessage, ws);
   
@@ -127,14 +147,14 @@ wss.on('connection', function (ws, request) {
       type: "system",
       sender: "room-general",
       time: new Date(),
-      body: `User ${userId} left the chat.`
+      body: `user ${handle} left the chat.`
     };
     broadcastMessage(roomUserLeft);
 
     // TODO send msg to update usersList
-    sessionUsers.delete(userId);
-    console.log(`user ${userId} Client disconnected, current connections: `); 
-    console.log(`${sessionUsers.keys()}`);
+    delete sessionUsers[userId];
+    console.log(`user ${userId} Client disconnected, current connections: `);
+    console.log(`${Object.keys(sessionUsers)}`);
   })
 
   function broadcastMessage(message, ws=null) {
