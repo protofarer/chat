@@ -4,7 +4,7 @@
   "description": "learning websockets ws lib",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "nodemon app/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Kenny",
