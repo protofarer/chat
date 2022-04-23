@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any">
+  <link rel="stylesheet" href="app.css">
+  <title>WebSockets Toy App</title>
+</head>
+<body>
+  <div id="topContainer">
+    <div id="menuContainer">
+      <menu id="menu">
+        <button id="login">
+          LOGIN
+        </button>
+        <button id="connect">
+          CONNECT
+        </button>
+      </menu>
+      <div class="usersListSpacer">
+        <!-- <div class="concentricSquares"><div class="concentricSquares"><div class="concentricSquares"></div></div></div> -->
+      </div>
+    </div>
+    <!-- <div id="spacerContainer">
+      <div class="chatBoxSpacer"></div><div class="usersListSpacer"></div>
+    </div> -->
+    <div id="chatContainer">
+      <div id="chatBox"></div>
+      <pre id="chatUsersList"></pre>
+    </div>
+    <div id="chatBoxSpacer"></div>
+    <div id="inputPanel">
+      <input id="userTextInput" type="text" />
+      <button id="send" type="submit">SEND</button>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
