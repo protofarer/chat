@@ -1,3 +1,8 @@
+// const HOST = process.env.APIHOST;
+// const PORT = process.env.PORT;
+// const URL = `${HOST}:${PORT}`;
+// const HOST = `localhost:3000`;
+const URL = 'https://localhost:3000';
 (() => {
   const loginButton = document.querySelector('#login');
   const connectButton = document.querySelector('#connect');
@@ -16,9 +21,10 @@
   loginButton.addEventListener('click', async () => {
     if (!state.isLoggedIn) {
       try {
+        console.log(`fetching POST ${URL}/login`)
         const response = await fetch(
-          '/login', 
-          { method: 'POST', credentials: 'same-origin', }
+          `${URL}/login`, 
+          { method: 'POST'}
         );
         
         if (response.ok) {
@@ -37,7 +43,7 @@
     } else {
       try {
         const response = await fetch(
-          '/logout',
+          `${URL}/logout`,
           { method: 'POST', credentials: 'same-origin' }
         );
         if (response.ok) {
@@ -75,7 +81,8 @@
       // ws.removeEventListener('close', handleWSEvents);
       ws.close();
     } else {
-      ws = new WebSocket(`wss://${location.host}`);
+      // ws = new WebSocket(`wss://${location.host}`);
+      ws = new WebSocket(`wss://${HOST}`);
       ws.addEventListener('open', handleWSEvents);
       ws.addEventListener('message', handleMessage);
       ws.addEventListener('error', handleWSEvents);

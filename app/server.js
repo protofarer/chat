@@ -3,13 +3,58 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const express=  require('express');
+const cors = require('cors');
 const session = require('express-session');
 const uuid = require('uuid');
 const WebSocket = require('ws');
 const { WebSocketServer } = require('ws');
 require('dotenv').config();
-
+// require('vite/modulepreload-polyfill');
 const app = express();
+
+app.use(cors());
+// app.use(express.static(path.resolve(__dirname, '../public')));
+
+const sessionParser = session({
+  saveUninitialized: false,
+  secret: process.env.SECRET,
+  resave: false
+})
+app.use(sessionParser);
+
+app.post('/login', (req, res) => {
+  const id = uuid.v4();
+  console.log(`Setup session for user ${id})`);
+  req.session.userId = id;
+  // res.set('Access-Control-Allow-Origin', '*');
+  res.send(JSON.stringify({ 
+    result: 'OK', 
+    type: 'system',
+    sender: 'knet',
+    body: `You logged in as user ${id}.`,
+    time: new Date()
+  }));
+});
+
+
+
+app.post('/logout', (req, res) => {
+  const ws = sessionUsers[req.session.userId];
+  console.log(`Destroying session for user ${req.session.userId }`);
+  req.session.destroy(() => {
+    if (ws) {
+      ws.close();
+    }
+    res.send(JSON.stringify({ 
+      result: 'OK', 
+      type: 'system',
+      sender: 'knet',
+      body: `You are logged out.`,
+      time: new Date(),
+    }));
+  });
+});
+
 const server = https.createServer(
   {
     key: fs.readFileSync(path.resolve(__dirname, '../key.pem')),
@@ -39,49 +84,11 @@ let handleNamePool = [
   'ghostofvanhalen'
 ];
 
-const sessionParser = session({
-  saveUninitialized: false,
-  secret: process.env.SECRET,
-  resave: false
-})
-
-app.use(express.static('public'));
-app.use(sessionParser);
-
-app.post('/login', (req, res) => {
-  const id = uuid.v4();
-  console.log(`Setup session for user ${id})`);
-  req.session.userId = id;
-  res.send(JSON.stringify({ 
-    result: 'OK', 
-    type: 'system',
-    sender: 'knet',
-    body: `You logged in as user ${id}.`,
-    time: new Date()
-  }));
-});
-
-app.post('/logout', (req, res) => {
-  const ws = sessionUsers[req.session.userId];
-  console.log(`Destroying session for user ${req.session.userId }`);
-  req.session.destroy(() => {
-    if (ws) {
-      ws.close();
-    }
-  res.send(JSON.stringify({ 
-    result: 'OK', 
-    type: 'system',
-    sender: 'knet',
-    body: `You are logged out.`,
-    time: new Date(),
-  }));
-  });
-});
-
 server.on('upgrade', (request, socket, head) => {
   console.log('Parsing session from request');
   sessionParser(request, {}, () => {
     if (!request.session.userId) {
+      console.log('apparent no userId..:', request)
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;
@@ -95,7 +102,7 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 
-wss.on('connection', function (ws, request) {
+wss.on('connection', function (ws, request, client) {
   // Upon connection right before client ws opens
   const userId = request.session.userId;
   const handle = handleNamePool.splice(Math.floor(Math.random()*handleNamePool.length),1)[0];
