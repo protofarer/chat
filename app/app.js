@@ -1,9 +1,14 @@
 // const HOST = process.env.APIHOST;
 // const PORT = process.env.PORT;
 // const URL = `${HOST}:${PORT}`;
-// const HOST = `localhost:3000`;
-const URL = 'https://localhost:3000';
+
 (() => {
+  const HOST = `localhost:3000`;
+  const URL = 'https://localhost:3000';
+  const vitaenv = import.meta.env.VITE_WSHOST;
+  console.log('vitaenv', vitaenv)
+
+
   const loginButton = document.querySelector('#login');
   const connectButton = document.querySelector('#connect');
   const chatBox = document.querySelector('#chatBox');
@@ -11,6 +16,7 @@ const URL = 'https://localhost:3000';
   const userTextInput = document.querySelector('#userTextInput');
   const sendButton = document.querySelector('#send');
 
+  userTextInput.value = '';  
   let ws;
   let state = {
     isLoggedIn: false,

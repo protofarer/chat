@@ -13,7 +13,7 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors());
-// app.use(express.static(path.resolve(__dirname, '../public')));
+// app.use(express.static(path.resolve(__dirname, '.')));
 
 const sessionParser = session({
   saveUninitialized: false,
@@ -88,7 +88,7 @@ server.on('upgrade', (request, socket, head) => {
   console.log('Parsing session from request');
   sessionParser(request, {}, () => {
     if (!request.session.userId) {
-      console.log('apparent no userId..:', request)
+      // console.log('apparent no userId..:', request)
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;
