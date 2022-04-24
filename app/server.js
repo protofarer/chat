@@ -33,9 +33,15 @@ app.use(sessionParser);
 //  });
 
 app.post('/login', (req, res) => {
-  const id = uuid.v4();
-  console.log(`Setup session for user ${id})`);
-  req.session.userId = id;
+  // ********* DEV *********
+  // const id = uuid.v4();
+  // req.session.userId = id;
+
+  console.log(`Setup session for user ${req.session.id})`);
+  // ***********************
+
+  // PROD_TODO session reload to re-populate req.session
+
   // console.log('IN /login endpoint REQ.SESSION', req.session)
   // res.set('Access-Control-Allow-Origin', '*');   // exclude, cors mw covers
   // Send as string so it is processed consistently in client handleMessage()
@@ -43,14 +49,14 @@ app.post('/login', (req, res) => {
     result: 'OK', 
     type: 'system',
     sender: 'knet',
-    body: `You logged in as user ${id}.`,
+    body: `You logged in as user ${req.session.id}.`,
     time: new Date()
   }));
 });
 
 app.post('/logout', (req, res) => {
-  const ws = sessionUsers[req.session.userId]?.ws;
-  console.log(`Destroying session for user ${req.session.userId }`);
+  const ws = sessionUsers[req.session.id]?.ws;
+  console.log(`Destroying session for user ${req.session.id}`);
   req.session.destroy(function () {
     if (ws) ws.close();
 
@@ -99,17 +105,18 @@ let handleNamePool = [
 
 server.on('upgrade', (req, socket, head) => {
   console.log('Parsing session from req');
+
   sessionParser(req, {}, () => {
     // console.log('IN server.onupgrade REQ.SESSION', req.session)
-    if (!req.session.userId) {
-      // console.log('apparent no userId..:', req)
+    if (!req.session.id) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;
     }
+
     console.log('Session parsed');
 
-    wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.handleUpgrade(req, socket, head, function (ws) {
       wss.emit('connection', ws, req);
     });
   });
@@ -118,8 +125,9 @@ server.on('upgrade', (req, socket, head) => {
 
 wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
-  const userId = req.session.userId;
-  const handle = handleNamePool.splice(Math.floor(Math.random()*handleNamePool.length),1)[0];
+  const userId = req.session.id;
+  const handle = handleNamePool
+    .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0];
   sessionUsers[userId] = { ws, handle };
 
   console.log(`user ${handle} connected, current connections: `);
@@ -137,13 +145,13 @@ wss.on('connection', function (ws, req, client) {
   
   // Broadcast entering user to clients
   // console.log(`Broadcasting user ${userId} entrance`);
-  const userEntryMessage = {
+  const roomUserEntryMessage = {
     type: "system",
     sender: "room-general",
     time: new Date(),
     body: `${handle} entered the chat.`
   }
-  broadcastMessage(userEntryMessage, ws);
+  broadcastMessage(roomUserEntryMessage, ws);
   
   // TODO send msg to update usersList
 
@@ -152,14 +160,11 @@ wss.on('connection', function (ws, req, client) {
     switch (message.type) {
       case 'userSendChat':
         message.sender = userId;
-        console.log(`Broadcasting message "${message.body}" from user ${message.sender}`);  // TODO make this work
         broadcastMessage(message)
         break;
       default:
         console.log('Error: Unhandled message type:', message.type);
     }
-
-    
   })
 
   ws.on('close', function () {
@@ -181,6 +186,7 @@ wss.on('connection', function (ws, req, client) {
   })
 
   function broadcastMessage(message, ws=null) {
+    console.log(`Broadcasting message "${message.body}" from user ${message.sender}`);  // TODO make this work
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN && client !== ws) {
         client.send(JSON.stringify(message));
