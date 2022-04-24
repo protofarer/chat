@@ -70,8 +70,8 @@ app.post('/logout', (req, res) => {
 
 const server = https.createServer(
   {
-    key: fs.readFileSync(path.resolve(__dirname, '../key.pem')),
-    cert: fs.readFileSync(path.resolve(__dirname, '../cert.pem'))
+    key: fs.readFileSync(path.resolve(__dirname, '../.ssl/key.pem')),
+    cert: fs.readFileSync(path.resolve(__dirname, '../.ssl/cert.pem'))
   }, 
   app
 );
