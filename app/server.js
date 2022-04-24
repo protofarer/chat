@@ -15,8 +15,6 @@ require('dotenv').config();
 // ***************************************************
 
 const app = express();
-app.use(cors());
-app.use(express.static(path.resolve(__dirname, '.')));
 
 const sessionParser = session({
   saveUninitialized: false,
@@ -24,14 +22,22 @@ const sessionParser = session({
   resave: false
 })
 
+app.use(cors());
+app.use(express.static(path.resolve(__dirname, '.')));
 app.use(sessionParser);
+
+// app.all('/', function(req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header("Access-Control-Allow-Headers", "X-Requested-With");
+//   next();
+//  });
 
 app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
   // console.log('IN /login endpoint REQUEST.SESSION', req.session)
-  // res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Origin', '*');
   res.send(JSON.stringify({ 
     result: 'OK', 
     type: 'system',
@@ -57,6 +63,7 @@ app.post('/logout', (req, res) => {
     }));
   });
 });
+
 
 // ***************************************************
 // ***************************************************
@@ -120,10 +127,11 @@ wss.on('connection', function (ws, request, client) {
   
   // Send welcome message to user entering room
   const userWelcomeMessage = {
-    type: "system",
+    type: "connect",
     sender: "room-general",
     time: new Date(),
     body: "======== Welcome to kenny.net general chat ========",
+    handle: handle,
   };
   ws.send(JSON.stringify(userWelcomeMessage));   // this sends to clientws.onmessage
   
@@ -191,12 +199,14 @@ wss.on('error', (event) => {
 })
 
 const PORT = process.env.PORT;
-const IP = '0.0.0.0';
-server.listen(PORT, () => {
-  console.log(`listening on https://${IP}:${PORT}`);
+const HOSTA = 'localhost';
+const HOSTB = '0.0.0.0';
+const HOSTC = '192.168.1.200'
+server.listen(PORT, HOSTB, () => {
+  console.log(`listening on https://${HOSTB}:${PORT}`);
 });
 
 // WARN make this work
 wss.on('listen', () => {
-  console.log(`listening on wss://${IP}:${PORT}`);
+  console.log(`listening on wss://${HOST}:${PORT}`);
 })

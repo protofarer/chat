@@ -23,6 +23,7 @@
     isLoggedIn: false,
     isChatConnected: false,
     room: '',
+    handle: '',
   };
 
   loginButton.addEventListener('click', async () => {
@@ -33,7 +34,7 @@
           `${URL}/login`, 
           { 
             method: 'POST', 
-            // credentials: 'same-origin'
+            credentials: 'same-origin'
           }
         );
         
@@ -151,8 +152,9 @@
           connectButton.innerText = 'CONNECT'
           // ws.destroy();
           // ws = null;
-          ws.onerror = ws.onopen = ws.onclose = null;
-          ws.close();
+
+          // ws.onerror = ws.onopen = ws.onclose = null;
+          // ws.close();
           ws = null;
         }
         break;
@@ -180,8 +182,11 @@
         break;
       case 'userSendChat':
         // TODO setup style around here
-        addChat(`(${time}) <strong>${sender}</strong>: ${body}`)
+        addChat(`(${time}) <strong>${state.handle}</strong>: ${body}`)
         break;
+      case 'connect':
+        state.handle = message.handle;
+        addChat(`(${time}) <strong>[${state.handle}]</strong>: ${body}`);
       // TMP fix wip
       // case 'userLeaveChat':
       //   addChat(`${time} ${sender}: ${body}`);
