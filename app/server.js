@@ -22,7 +22,7 @@ const sessionParser = session({
   resave: false
 })
 
-app.use(cors());
+// app.use(cors());
 app.use(express.static(path.resolve(__dirname, '.')));
 app.use(sessionParser);
 
@@ -36,8 +36,6 @@ app.post('/login', (req, res) => {
   // ********* DEV *********
   // const id = uuid.v4();
   // req.session.userId = id;
-  // const reloaded = req.session.reload((err) => console.log('session reload err:', err));
-  // console.log(`Setup session for user ${req.session.id})`);
   // ***********************
 
   // PROD_TODO session reload to re-populate req.session
@@ -45,6 +43,11 @@ app.post('/login', (req, res) => {
   // console.log('IN /login endpoint REQ.SESSION', req.session)
   // res.set('Access-Control-Allow-Origin', '*');   // exclude, cors mw covers
   // Send as string so it is processed consistently in client handleMessage()
+  console.log('session before regen', req.session, 'id:', req.session.id, 'sessionID', req.sessionID);
+  req.session.regenerate(() => {
+    console.log('new session', req.session, 'id', req.session.id, 'sessionID', req.sessionID);
+  })
+  console.log('Setting up or Parsing session for user:');
   res.send(JSON.stringify({ 
     result: 'OK', 
     type: 'system',
@@ -56,9 +59,14 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   const ws = sessionUsers[req.session.id]?.ws;
+  console.log('IN /logout session id', req.session.id)
+  console.log('logout ws:', ws)
   console.log(`Destroying session for user ${req.session.id}`);
   req.session.destroy(function () {
-    if (ws) ws.close();
+    if (ws) {
+      console.log('ws.close()')
+      ws.close();
+    }
 
     res.send(JSON.stringify({ 
       result: 'OK', 

@@ -28,34 +28,11 @@
 
   // TODO Use session if exists upon document load
   // get handle from session
-  // dispatch client-side logged in action
+  // dispatch action: client to logged in state
 
-  async function login() {
-    try {
-      console.log('oh hey cookie', document.cookie);
-      console.log(`POST ${URL}/login`)
-      const response = await fetch(
-        `${URL}/login`, 
-        { 
-          method: 'POST', 
-          credentials: 'same-origin'
-        }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        const event = {};
-        event.data = JSON.stringify(data);
-        handleMessage(event);
-        state.isLoggedIn = true;
-        loginButton.innerText = 'LOGOUT';
-      } else {
-        throw new Error('Unexpected login response');
-      }
-    } catch (err) {
-      console.log('Login Error:', err);
-    }
-  }
+  // Login upon document load:
+  document.onload = login();
+
 
   loginButton.addEventListener('click', async () => {
     if (!state.isLoggedIn) {
@@ -212,7 +189,7 @@
     // chatBox.innerHTML updated to state.chat every time this
     // fn invoked.
     chatBox.innerHTML += `${body}<br />`;
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight;   // sets scrollTop to max value
   }
   
   function addChatFromClient(body) {
@@ -255,6 +232,32 @@
       isLoggedIn: false,
       isChatConnected: false,
       room: '',
+    }
+  }
+
+  async function login() {
+    try {
+      console.log(`POST ${URL}/login`)
+      const response = await fetch(
+        `${URL}/login`, 
+        { 
+          method: 'POST', 
+          credentials: 'same-origin'
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        const event = {};
+        event.data = JSON.stringify(data);
+        handleMessage(event);
+        state.isLoggedIn = true;
+        loginButton.innerText = 'LOGOUT';
+      } else {
+        throw new Error('Unexpected login response');
+      }
+    } catch (err) {
+      console.log('Login Error:', err);
     }
   }
 })()
