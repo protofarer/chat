@@ -28,7 +28,7 @@ app.use(sessionParser);
 
 // app.all('/', function(req, res, next) {
 //   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Headers", "X-Requested-With");
+//   res.header("Access-Control-Allow-Headers", "X-Reqed-With");
 //   next();
 //  });
 
@@ -36,7 +36,7 @@ app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
-  // console.log('IN /login endpoint REQUEST.SESSION', req.session)
+  // console.log('IN /login endpoint REQ.SESSION', req.session)
   // res.set('Access-Control-Allow-Origin', '*');   // exclude, cors mw covers
   // Send as string so it is processed consistently in client handleMessage()
   res.send(JSON.stringify({ 
@@ -51,10 +51,9 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   const ws = sessionUsers[req.session.userId]?.ws;
   console.log(`Destroying session for user ${req.session.userId }`);
-  req.session.destroy(() => {
-    if (ws) {
-      ws.close();
-    }
+  req.session.destroy(function () {
+    if (ws) ws.close();
+
     res.send(JSON.stringify({ 
       result: 'OK', 
       type: 'system',
@@ -98,28 +97,28 @@ let handleNamePool = [
   'ghostofvanhalen'
 ];
 
-server.on('upgrade', (request, socket, head) => {
-  console.log('Parsing session from request');
-  sessionParser(request, {}, () => {
-    // console.log('IN server.onupgrade REQUEST.SESSION', request.session)
-    if (!request.session.userId) {
-      // console.log('apparent no userId..:', request)
+server.on('upgrade', (req, socket, head) => {
+  console.log('Parsing session from req');
+  sessionParser(req, {}, () => {
+    // console.log('IN server.onupgrade REQ.SESSION', req.session)
+    if (!req.session.userId) {
+      // console.log('apparent no userId..:', req)
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;
     }
     console.log('Session parsed');
 
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit('connection', ws, req);
     });
   });
 });
 
 
-wss.on('connection', function (ws, request, client) {
+wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
-  const userId = request.session.userId;
+  const userId = req.session.userId;
   const handle = handleNamePool.splice(Math.floor(Math.random()*handleNamePool.length),1)[0];
   sessionUsers[userId] = { ws, handle };
 
