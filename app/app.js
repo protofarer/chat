@@ -2,7 +2,7 @@
 // const PORT = process.env.PORT;
 // const URL = `${HOST}:${PORT}`;
 
-(() => {
+(async () => {
 
   const PORT = import.meta.env ? import.meta.env.VITE_PORT : 3000;
   const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://0.0.0.0`;
@@ -26,31 +26,36 @@
     handle: '',
   };
 
+  // Use existing session
+  function login() {
+    try {
+      console.log(`checking existing sess POST ${URL}/login`)
+      const response = await fetch(
+        `${URL}/login`, 
+        { 
+          method: 'POST', 
+          credentials: 'same-origin'
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        const event = {};
+        event.data = JSON.stringify(data);
+        handleMessage(event);
+        state.isLoggedIn = true;
+        loginButton.innerText = 'LOGOUT';
+      } else {
+        throw new Error('Unexpected login response');
+      }
+    } catch (err) {
+      console.log('Login Error:', err);
+    }
+  }
+
   loginButton.addEventListener('click', async () => {
     if (!state.isLoggedIn) {
-      try {
-        console.log(`fetching POST ${URL}/login`)
-        const response = await fetch(
-          `${URL}/login`, 
-          { 
-            method: 'POST', 
-            credentials: 'same-origin'
-          }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          const event = {};
-          event.data = JSON.stringify(data);
-          handleMessage(event);
-          state.isLoggedIn = true;
-          loginButton.innerText = 'LOGOUT';
-        } else {
-          throw new Error('Unexpected login response');
-        }
-      } catch (err) {
-        console.log('Login Error:', err);
-      }
+      login();
     } else {
       try {
         const response = await fetch(
