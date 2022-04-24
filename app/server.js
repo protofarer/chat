@@ -9,23 +9,28 @@ const uuid = require('uuid');
 const WebSocket = require('ws');
 const { WebSocketServer } = require('ws');
 require('dotenv').config();
-// require('vite/modulepreload-polyfill');
-const app = express();
 
+// ***************************************************
+//                    EXPRESS
+// ***************************************************
+
+const app = express();
 app.use(cors());
-// app.use(express.static(path.resolve(__dirname, '.')));
+app.use(express.static(path.resolve(__dirname, '.')));
 
 const sessionParser = session({
   saveUninitialized: false,
   secret: process.env.SECRET,
   resave: false
 })
+
 app.use(sessionParser);
 
 app.post('/login', (req, res) => {
   const id = uuid.v4();
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
+  // console.log('IN /login endpoint REQUEST.SESSION', req.session)
   // res.set('Access-Control-Allow-Origin', '*');
   res.send(JSON.stringify({ 
     result: 'OK', 
@@ -36,10 +41,8 @@ app.post('/login', (req, res) => {
   }));
 });
 
-
-
 app.post('/logout', (req, res) => {
-  const ws = sessionUsers[req.session.userId];
+  const ws = sessionUsers[req.session.userId]?.ws;
   console.log(`Destroying session for user ${req.session.userId }`);
   req.session.destroy(() => {
     if (ws) {
@@ -55,6 +58,9 @@ app.post('/logout', (req, res) => {
   });
 });
 
+// ***************************************************
+// ***************************************************
+
 const server = https.createServer(
   {
     key: fs.readFileSync(path.resolve(__dirname, '../key.pem')),
@@ -62,9 +68,9 @@ const server = https.createServer(
   }, 
   app
 );
+
 const wss = new WebSocketServer({ noServer: true, clientTracking: true });
 
-// const sessionUsers = new Map();
 const sessionUsers = {};    // Dictionary, userId as key
 let handleNamePool = [
   'pikachu',
@@ -87,6 +93,7 @@ let handleNamePool = [
 server.on('upgrade', (request, socket, head) => {
   console.log('Parsing session from request');
   sessionParser(request, {}, () => {
+    // console.log('IN server.onupgrade REQUEST.SESSION', request.session)
     if (!request.session.userId) {
       // console.log('apparent no userId..:', request)
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
@@ -160,6 +167,9 @@ wss.on('connection', function (ws, request, client) {
     delete sessionUsers[userId];
     console.log(`user ${userId} Client disconnected, current connections: `);
     console.log(`${Object.keys(sessionUsers)}`);
+    // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
+    // ws.termiante equiv to node socket.destroy()
+    // ws.terminate();
   })
 
   function broadcastMessage(message, ws=null) {
@@ -174,6 +184,10 @@ wss.on('connection', function (ws, request, client) {
 wss.on('close', function(event) {
   console.log('wss close:', event);
   // TODO find a way to broadcast server/room shutting down
+})
+
+wss.on('error', (event) => {
+  console.log('WSS errored: ', event)
 })
 
 const PORT = process.env.PORT;

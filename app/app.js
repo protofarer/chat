@@ -3,12 +3,13 @@
 // const URL = `${HOST}:${PORT}`;
 
 (() => {
-  const HOST = `localhost:3000`;
-  const URL = 'https://localhost:3000';
-  const vitaenv = import.meta.env.VITE_WSHOST;
-  console.log('vitaenv', vitaenv)
 
+  const PORT = import.meta.env ? import.meta.env.VITE_PORT : 3000;
+  const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://localhost`;
+  const WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://localhost`;
+  const URL = `${HTTPS_HOST}:${PORT}`;
 
+  // console.log(location.host)
   const loginButton = document.querySelector('#login');
   const connectButton = document.querySelector('#connect');
   const chatBox = document.querySelector('#chatBox');
@@ -30,7 +31,10 @@
         console.log(`fetching POST ${URL}/login`)
         const response = await fetch(
           `${URL}/login`, 
-          { method: 'POST'}
+          { 
+            method: 'POST', 
+            // credentials: 'same-origin'
+          }
         );
         
         if (response.ok) {
@@ -57,9 +61,15 @@
           const event = {};
           event.data = JSON.stringify(data);
           handleMessage(event);
-          // addChat(data.message);
+          
           state.isLoggedIn = false;
           loginButton.innerText = 'LOGIN';
+          // state.isChatConnected = false;
+
+          // possible bugFix to how connect button hangs
+          // after logout pressed without disconnecting first
+          // : some ws terminate or ws = null statement ???
+          // ... the server destroys ws in logout endpoint
         } else {
           throw new Error('Unexpected logout response');
         }
@@ -86,9 +96,10 @@
       // ws.removeEventListener('error', handleWSEvents);
       // ws.removeEventListener('close', handleWSEvents);
       ws.close();
+      ws = null;
     } else {
       // ws = new WebSocket(`wss://${location.host}`);
-      ws = new WebSocket(`wss://${HOST}`);
+      ws = new WebSocket(`${WSS_HOST}:${PORT}`);
       ws.addEventListener('open', handleWSEvents);
       ws.addEventListener('message', handleMessage);
       ws.addEventListener('error', handleWSEvents);
@@ -138,6 +149,10 @@
           state.isChatConnected = false;
           state.room = '';
           connectButton.innerText = 'CONNECT'
+          // ws.destroy();
+          // ws = null;
+          ws.onerror = ws.onopen = ws.onclose = null;
+          ws.close();
           ws = null;
         }
         break;
@@ -194,6 +209,7 @@
       addChatFromClient(`Cannot send message, you are disconnected`);
       return;
     }
+    console.log(ws)
     if (userTextInput.value.trim().length > 0) {
       const message = {
         type: 'userSendChat',
