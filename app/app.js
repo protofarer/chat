@@ -51,7 +51,8 @@
           
           state.isLoggedIn = false;
           loginButton.innerText = 'LOGIN';
-          // state.isChatConnected = false;
+          state.isChatConnected = false;
+          connectButton.innerText = 'CONNECT'
 
           // possible bugFix to how connect button hangs
           // after logout pressed without disconnecting first

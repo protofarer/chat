@@ -48,21 +48,19 @@ app.post('/login', (req, res) => {
     result: 'OK', 
     type: 'system',
     sender: 'knet',
-    body: `You logged in as user ${req.session.id}.`,
+    body: `You logged in.`,
     time: new Date()
   }));
 });
 
 app.post('/logout', (req, res) => {
   const ws = sessionUsers[req.session.id]?.ws;
-  console.log('logout ws:', ws)
   console.log(`(IN /logout Destroying session for user ${req.session.id}`);
   req.session.destroy(function () {
 
     // This block I assume to cover the case when disconnect is skipped
     // CSDR delete from sessionUsers
     if (ws) {
-      console.log('ws.close()')
       delete sessionUsers[req.session.id]
       ws.close();
     }
@@ -122,7 +120,6 @@ server.on('upgrade', (req, socket, head) => {
     }
 
     console.log('Session parsed:');
-    console.log(req.session.id)
 
     wss.handleUpgrade(req, socket, head, function (ws) {
       wss.emit('connection', ws, req);
@@ -137,7 +134,6 @@ wss.on('connection', function (ws, req, client) {
   const handle = handleNamePool
     .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0];
   sessionUsers[req.session.id] = { ws, handle };
-  console.log('user', req.session.id, 'saved to sessionUsers obj')
 
   console.log(`user ${req.session.id} connected, current connections: `);
   console.log(Object.keys(sessionUsers));
@@ -187,7 +183,6 @@ wss.on('connection', function (ws, req, client) {
 
     // TODO send msg to update usersList
     delete sessionUsers[req.session.id];
-    console.log('user', req.session.id, 'deleted from sessionUsers')
     console.log(`user ${req.session.id} Client disconnected, current connections: `);
     console.log(`${Object.keys(sessionUsers)}`);
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
