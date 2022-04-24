@@ -83,7 +83,7 @@
       // ws.removeEventListener('error', handleWSEvents);
       // ws.removeEventListener('close', handleWSEvents);
       ws.close();
-      ws = null;
+      // ws = null;
     } else {
       // ws = new WebSocket(`wss://${location.host}`);
       ws = new WebSocket(`${WSS_HOST}:${PORT}`);

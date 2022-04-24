@@ -43,11 +43,7 @@ app.post('/login', (req, res) => {
   // console.log('IN /login endpoint REQ.SESSION', req.session)
   // res.set('Access-Control-Allow-Origin', '*');   // exclude, cors mw covers
   // Send as string so it is processed consistently in client handleMessage()
-  console.log('session before regen', req.session, 'id:', req.session.id, 'sessionID', req.sessionID);
-  req.session.regenerate(() => {
-    console.log('new session', req.session, 'id', req.session.id, 'sessionID', req.sessionID);
-  })
-  console.log('Setting up or Parsing session for user:');
+  // console.log('(IN /login) req.session.id:', req.session.id); // these id are artifacts unrelated to the session when it is established aka PARSED
   res.send(JSON.stringify({ 
     result: 'OK', 
     type: 'system',
@@ -59,12 +55,15 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   const ws = sessionUsers[req.session.id]?.ws;
-  console.log('IN /logout session id', req.session.id)
   console.log('logout ws:', ws)
-  console.log(`Destroying session for user ${req.session.id}`);
+  console.log(`(IN /logout Destroying session for user ${req.session.id}`);
   req.session.destroy(function () {
+
+    // This block I assume to cover the case when disconnect is skipped
+    // CSDR delete from sessionUsers
     if (ws) {
       console.log('ws.close()')
+      delete sessionUsers[req.session.id]
       ws.close();
     }
 
@@ -122,7 +121,8 @@ server.on('upgrade', (req, socket, head) => {
       return;
     }
 
-    console.log('Session parsed');
+    console.log('Session parsed:');
+    console.log(req.session.id)
 
     wss.handleUpgrade(req, socket, head, function (ws) {
       wss.emit('connection', ws, req);
@@ -133,12 +133,13 @@ server.on('upgrade', (req, socket, head) => {
 
 wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
-  const userId = req.session.id;
+  // const userId = req.session.id;
   const handle = handleNamePool
     .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0];
-  sessionUsers[userId] = { ws, handle };
+  sessionUsers[req.session.id] = { ws, handle };
+  console.log('user', req.session.id, 'saved to sessionUsers obj')
 
-  console.log(`user ${handle} connected, current connections: `);
+  console.log(`user ${req.session.id} connected, current connections: `);
   console.log(Object.keys(sessionUsers));
   
   // Send welcome message to user entering room
@@ -167,7 +168,7 @@ wss.on('connection', function (ws, req, client) {
     const message = JSON.parse(rawMessage);
     switch (message.type) {
       case 'userSendChat':
-        message.sender = userId;
+        message.sender = handle;
         broadcastMessage(message)
         break;
       default:
@@ -185,8 +186,9 @@ wss.on('connection', function (ws, req, client) {
     broadcastMessage(roomUserLeft);
 
     // TODO send msg to update usersList
-    delete sessionUsers[userId];
-    console.log(`user ${userId} Client disconnected, current connections: `);
+    delete sessionUsers[req.session.id];
+    console.log('user', req.session.id, 'deleted from sessionUsers')
+    console.log(`user ${req.session.id} Client disconnected, current connections: `);
     console.log(`${Object.keys(sessionUsers)}`);
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
     // ws.termiante equiv to node socket.destroy()
