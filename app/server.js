@@ -208,5 +208,5 @@ server.listen(PORT, HOSTB, () => {
 
 // WARN make this work
 wss.on('listen', () => {
-  console.log(`listening on wss://${HOST}:${PORT}`);
+  // console.log(`listening on wss://${HOST}:${PORT}`);
 })

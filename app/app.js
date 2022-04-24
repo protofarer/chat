@@ -214,7 +214,7 @@
       addChatFromClient(`Cannot send message, you are disconnected`);
       return;
     }
-    console.log(ws)
+    console.log('IN sendChatMessage, ws:', ws)
     if (userTextInput.value.trim().length > 0) {
       const message = {
         type: 'userSendChat',
