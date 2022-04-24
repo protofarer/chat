@@ -26,10 +26,14 @@
     handle: '',
   };
 
-  // Use existing session
-  function login() {
+  // TODO Use session if exists upon document load
+  // get handle from session
+  // dispatch client-side logged in action
+
+  async function login() {
     try {
-      console.log(`checking existing sess POST ${URL}/login`)
+      console.log('oh hey cookie', document.cookie);
+      console.log(`POST ${URL}/login`)
       const response = await fetch(
         `${URL}/login`, 
         { 

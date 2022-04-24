@@ -36,8 +36,8 @@ app.post('/login', (req, res) => {
   // ********* DEV *********
   // const id = uuid.v4();
   // req.session.userId = id;
-
-  console.log(`Setup session for user ${req.session.id})`);
+  // const reloaded = req.session.reload((err) => console.log('session reload err:', err));
+  // console.log(`Setup session for user ${req.session.id})`);
   // ***********************
 
   // PROD_TODO session reload to re-populate req.session
