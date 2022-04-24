@@ -5,8 +5,8 @@
 (() => {
 
   const PORT = import.meta.env ? import.meta.env.VITE_PORT : 3000;
-  const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://localhost`;
-  const WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://localhost`;
+  const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://0.0.0.0`;
+  const WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://0.0.0.0`;
   const URL = `${HTTPS_HOST}:${PORT}`;
 
   // console.log(location.host)
@@ -121,7 +121,7 @@
 
   function handleWSEvents(event) {
     // Dispatches websocket event actions
-    console.log('cli rcv event.type', event.type)
+    console.log('ws event', event.type)
     switch (event.type) {
       case 'error':
         console.log('WS Error code:', event.code);     
@@ -169,6 +169,7 @@
     // TODO check and handle event typeof (server message passing)
     // TODO check and handle object typeof (local message passing)
     const message = JSON.parse(event.data);   // TODO JSON.parse replacer for time property
+    console.log('handleMessage event.data', message)
     // Dispatches messages from server
     let { type, sender, time, body } = message;
     time = new Date(time).toLocaleTimeString(
@@ -190,9 +191,9 @@
       // TMP fix wip
       // case 'userLeaveChat':
       //   addChat(`${time} ${sender}: ${body}`);
-      //   break;
+        break;
       default:
-        console.log('Unhandled message.type');
+        console.log('Unhandled message.type:', message.type);
         break;
     }
   }

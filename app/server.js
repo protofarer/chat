@@ -37,7 +37,8 @@ app.post('/login', (req, res) => {
   console.log(`Setup session for user ${id})`);
   req.session.userId = id;
   // console.log('IN /login endpoint REQUEST.SESSION', req.session)
-  res.set('Access-Control-Allow-Origin', '*');
+  // res.set('Access-Control-Allow-Origin', '*');   // exclude, cors mw covers
+  // Send as string so it is processed consistently in client handleMessage()
   res.send(JSON.stringify({ 
     result: 'OK', 
     type: 'system',
@@ -198,12 +199,14 @@ wss.on('error', (event) => {
   console.log('WSS errored: ', event)
 })
 
-const PORT = process.env.PORT;
 const HOSTA = 'localhost';
 const HOSTB = '0.0.0.0';
 const HOSTC = '192.168.1.200'
-server.listen(PORT, HOSTB, () => {
-  console.log(`listening on https://${HOSTB}:${PORT}`);
+const PORT = process.env.PORT;
+const HOST = process.env.EXPRESS_HTTPS_HOST;
+
+server.listen(PORT, HOST, () => {
+  console.log(`listening on https://${HOST}:${PORT}`);
 });
 
 // WARN make this work
