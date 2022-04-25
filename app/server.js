@@ -135,8 +135,8 @@ wss.on('connection', function (ws, req, client) {
     .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0];
   sessionUsers[req.session.id] = { ws, handle };
 
-  console.log(`user ${req.session.id} connected, current connections: `);
-  console.log(Object.keys(sessionUsers));
+  console.log(`user ${req.session.id} connected, current connections (tmp hide dev): `);
+  // console.log(Object.keys(sessionUsers));
   
   // Send welcome message to user entering room
   const userWelcomeMessage = {
@@ -172,7 +172,8 @@ wss.on('connection', function (ws, req, client) {
     }
   })
 
-  ws.on('close', function () {
+  ws.on('close', function (closeEvent) {
+    console.debug('closeEvent', closeEvent);
     const roomUserLeft = {
       type: "system",
       sender: "room-general",
@@ -183,8 +184,8 @@ wss.on('connection', function (ws, req, client) {
 
     // TODO send msg to update usersList
     delete sessionUsers[req.session.id];
-    console.log(`user ${req.session.id} Client disconnected, current connections: `);
-    console.log(`${Object.keys(sessionUsers)}`);
+    console.log(`user ${req.session.id} Client disconnected, current connections(tmp hide dev): `);
+    // console.log(`${Object.keys(sessionUsers)}`);
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
     // ws.termiante equiv to node socket.destroy()
     // ws.terminate();

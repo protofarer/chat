@@ -38,31 +38,37 @@
     if (!state.isLoggedIn) {
       login();
     } else {
-      try {
-        const response = await fetch(
-          `${URL}/logout`,
-          { method: 'POST', credentials: 'same-origin' }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          const event = {};
-          event.data = JSON.stringify(data);
-          handleMessage(event);
-          
-          state.isLoggedIn = false;
-          loginButton.innerText = 'LOGIN';
-          state.isChatConnected = false;
-          connectButton.innerText = 'CONNECT'
-
-          // possible bugFix to how connect button hangs
-          // after logout pressed without disconnecting first
-          // : some ws terminate or ws = null statement ???
-          // ... the server destroys ws in logout endpoint
-        } else {
-          throw new Error('Unexpected logout response');
+      if (state.isChatConnected) {
+        addChatFromClient('You must disconnect from chat before \
+          logging out. <auto-disconnect will be enable in future \
+          release>');
+      } else {
+        try {
+          const response = await fetch(
+            `${URL}/logout`,
+            { method: 'POST', credentials: 'same-origin' }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const event = {};
+            event.data = JSON.stringify(data);
+            handleMessage(event);
+            
+            state.isLoggedIn = false;
+            loginButton.innerText = 'LOGIN';
+            state.isChatConnected = false;
+            connectButton.innerText = 'CONNECT'
+  
+            // possible bugFix to how connect button hangs
+            // after logout pressed without disconnecting first
+            // : some ws terminate or ws = null statement ???
+            // ... the server destroys ws in logout endpoint
+          } else {
+            throw new Error('Unexpected logout response');
+          }
+        } catch (err) {
+          console.log('Logout error:', err.message);
         }
-      } catch (err) {
-        console.log('Logout error:', err.message);
       }
     }
   });
@@ -85,6 +91,7 @@
       // ws.removeEventListener('close', handleWSEvents);
       ws.close();
       // ws = null;
+      state.room = '';
     } else {
       // ws = new WebSocket(`wss://${location.host}`);
       ws = new WebSocket(`${WSS_HOST}:${PORT}`);
