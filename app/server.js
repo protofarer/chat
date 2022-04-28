@@ -172,8 +172,9 @@ wss.on('connection', function (ws, req, client) {
     }
   })
 
-  ws.on('close', function (closeEvent) {
-    console.debug('closeEvent', closeEvent);
+  ws.on('close', function (close) {
+    console.debug('closeEvent', close);
+    // console.debug('closeReason', closeReason)
     const roomUserLeft = {
       type: "system",
       sender: "room-general",
