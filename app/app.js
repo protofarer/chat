@@ -6,7 +6,6 @@ const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://
 const WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://0.0.0.0`;
 export const URL = `${HTTPS_HOST}:${PORT}`;
 
-
 export let state = {
   isLoggedIn: false,
   isChatConnected: false,
@@ -16,18 +15,18 @@ export let state = {
 };
 
 let ws;
-let ui = new UI(handler)
+export let ui = new UI(handler)
 
 // TODO Use session if exists upon document load
 // get handle from session
 // dispatch action: client to logged in state
 
 // Non-UI actions upon user loading page
-document.onload = handleLoad;
+// document.onload = handleLoad;
 
-function handleLoad() {
-  handler({ type: 'LOGIN' });
-}
+// function handleLoad() {
+//   handler({ type: 'LOGIN' });
+// }
 
 
 
@@ -72,7 +71,7 @@ export function handleMessage(event) {
 
 
 
-connectButton.addEventListener('click', () => {
+ui.connectButton.addEventListener('click', () => {
   // Is a toggle button, thus cannot attempt a disconnect when already disconnected
   // As a result this condition isn't handled in the event handler 
   if (ws) { 
@@ -101,13 +100,13 @@ connectButton.addEventListener('click', () => {
   }
 });
 
-sendButton.addEventListener('click', (e) => {
+ui.sendButton.addEventListener('click', (e) => {
   sendChatMessage(e);
 })
 // CSDR better way to do this without making it a form... \
 // or should it be a form? eg POST to route with userId and data?...
 // how does a form accomplish this?
-userTextInput.addEventListener('keydown', (e) => {
+ui.userTextInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') sendChatMessage(e);
 })
 
@@ -121,7 +120,7 @@ function handleWSEvents(event) {
       break;
     case 'open':
       // Can only open if already logged in
-      connectButton.innerText = 'DISCONNECT';
+      ui.connectButton.innerText = 'DISCONNECT';
       state.isChatConnected = true;
       state.room = 'general';
       break;
@@ -143,7 +142,7 @@ function handleWSEvents(event) {
         handleMessage(event);
         state.isChatConnected = false;
         state.room = '';
-        connectButton.innerText = 'CONNECT'
+        ui.connectButton.innerText = 'CONNECT'
         // ws.destroy();
         // ws = null;
 
@@ -162,8 +161,8 @@ function addChat(body) {
   // TODO concatenates to existing state.chat
   // chatBox.innerHTML updated to state.chat every time this
   // fn invoked.
-  chatBox.innerHTML += `${body}<br />`;
-  chatBox.scrollTop = chatBox.scrollHeight;   // sets scrollTop to max value
+  ui.chatBox.innerHTML += `${body}<br />`;
+  ui.chatBox.scrollTop = chatBox.scrollHeight;   // sets scrollTop to max value
 }
 
 function addChatFromClient(body) {
@@ -179,13 +178,13 @@ function sendChatMessage(e) {
   if (userTextInput.value.trim().length > 0) {
     const message = {
       type: 'userSendChat',
-      body: userTextInput.value,
+      body: ui.userTextInput.value,
       time: new Date(),
     }
     const rawMessage = JSON.stringify(message);
     ws.send(rawMessage);
   }
-  userTextInput.value = '';
+  ui.userTextInput.value = '';
 }
 
 function notifyLeave(e){
@@ -206,5 +205,7 @@ function resetState() {
     isLoggedIn: false,
     isChatConnected: false,
     room: '',
+    handle: '',
+    textInput: ''
   }
 }
