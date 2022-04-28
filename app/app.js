@@ -1,10 +1,11 @@
 import UI from './modules/initUI.js';
-import reducer from './modules/reducer.js';
+import handler from './modules/handler.js';
 
 const PORT = import.meta.env ? import.meta.env.VITE_PORT : 3000;
 const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://0.0.0.0`;
 const WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://0.0.0.0`;
-const URL = `${HTTPS_HOST}:${PORT}`;
+export const URL = `${HTTPS_HOST}:${PORT}`;
+
 
 export let state = {
   isLoggedIn: false,
@@ -15,60 +16,58 @@ export let state = {
 };
 
 let ws;
-let ui = new UI(reducer)
+let ui = new UI(handler)
 
 // TODO Use session if exists upon document load
 // get handle from session
 // dispatch action: client to logged in state
 
 // Non-UI actions upon user loading page
-document.onload = login();
+document.onload = handleLoad;
 
-export async function login() {
-  console.log(`POST ${URL}/login`)
-  // Is a try/catch around fetch needed?
-  const response = await fetch(
-    `${URL}/login`, 
-    { 
-      method: 'POST', 
-      credentials: 'same-origin'
-    }
-  );
-  
-  return response.ok 
-    ? await response.json()
-    : new Error('Unexpected login response');
+function handleLoad() {
+  handler({ type: 'LOGIN' });
 }
 
-export async function logout() {
-  try {
-    const response = await fetch(
-      `${URL}/logout`,
-      { method: 'POST', credentials: 'same-origin' }
-    );
-    if (response.ok) {
-      const data = await response.json();
-      const event = {};
-      event.data = JSON.stringify(data);
-      handleMessage(event);
-      
-      state.isLoggedIn = false;
-      ui.loginButton.innerText = 'LOGIN';
-      state.isChatConnected = false;
-      ui.connectButton.innerText = 'CONNECT'
 
-      // possible bugFix to how connect button hangs
-      // after logout pressed without disconnecting first
-      // : some ws terminate or ws = null statement ???
-      // ... the server destroys ws in logout endpoint
-    } else {
-      throw new Error('Unexpected logout response');
-    }
-  } catch (err) {
-    console.log('Logout error:', err.message);
+
+
+
+
+export function handleMessage(event) {
+  // Formats and acts on messages from server
+
+  // TODO check and handle event typeof (server message passing)
+  // TODO check and handle object typeof (local message passing)
+  const message = JSON.parse(event.data);   // TODO JSON.parse replacer for time property
+  console.log('handleMessage event.data', message)
+  // Dispatches messages from server
+  let { type, sender, time, body } = message;
+  time = new Date(time).toLocaleTimeString(
+    'en-US', 
+    { timeZoneName: 'short' }
+  );
+  switch (type) {
+    case 'system':
+      // TODO setup style around here
+      addChat(`(${time}) <strong>[${sender}]</strong>: ${body}`);
+      break;
+    case 'userSendChat':
+      // TODO setup style around here
+      addChat(`(${time}) <strong>${state.handle}</strong>: ${body}`)
+      break;
+    case 'connect':
+      state.handle = message.handle;
+      addChat(`(${time}) <strong>[${state.handle}]</strong>: ${body}`);
+    // TMP fix wip
+    // case 'userLeaveChat':
+    //   addChat(`${time} ${sender}: ${body}`);
+      break;
+    default:
+      console.log('Unhandled message.type:', message.type);
+      break;
   }
 }
-
 
 
 
@@ -158,40 +157,6 @@ function handleWSEvents(event) {
   }
 }
 
-function handleMessage(event) {
-  // Formats and acts on messages from server
-
-  // TODO check and handle event typeof (server message passing)
-  // TODO check and handle object typeof (local message passing)
-  const message = JSON.parse(event.data);   // TODO JSON.parse replacer for time property
-  console.log('handleMessage event.data', message)
-  // Dispatches messages from server
-  let { type, sender, time, body } = message;
-  time = new Date(time).toLocaleTimeString(
-    'en-US', 
-    { timeZoneName: 'short' }
-  );
-  switch (type) {
-    case 'system':
-      // TODO setup style around here
-      addChat(`(${time}) <strong>[${sender}]</strong>: ${body}`);
-      break;
-    case 'userSendChat':
-      // TODO setup style around here
-      addChat(`(${time}) <strong>${state.handle}</strong>: ${body}`)
-      break;
-    case 'connect':
-      state.handle = message.handle;
-      addChat(`(${time}) <strong>[${state.handle}]</strong>: ${body}`);
-    // TMP fix wip
-    // case 'userLeaveChat':
-    //   addChat(`${time} ${sender}: ${body}`);
-      break;
-    default:
-      console.log('Unhandled message.type:', message.type);
-      break;
-  }
-}
 
 function addChat(body) {
   // TODO concatenates to existing state.chat
