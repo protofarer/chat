@@ -6,14 +6,14 @@ const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://
 const WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://0.0.0.0`;
 const URL = `${HTTPS_HOST}:${PORT}`;
 
-let state = {
+export let state = {
   isLoggedIn: false,
   isChatConnected: false,
   room: '',
   handle: '',
   textInput: ''
 };
-userTextInput.value = '';  
+
 let ws;
 let ui = new UI(reducer)
 
@@ -21,10 +21,53 @@ let ui = new UI(reducer)
 // get handle from session
 // dispatch action: client to logged in state
 
-// Login upon document load:
+// Non-UI actions upon user loading page
 document.onload = login();
 
+export async function login() {
+  console.log(`POST ${URL}/login`)
+  // Is a try/catch around fetch needed?
+  const response = await fetch(
+    `${URL}/login`, 
+    { 
+      method: 'POST', 
+      credentials: 'same-origin'
+    }
+  );
+  
+  return response.ok 
+    ? await response.json()
+    : new Error('Unexpected login response');
+}
 
+export async function logout() {
+  try {
+    const response = await fetch(
+      `${URL}/logout`,
+      { method: 'POST', credentials: 'same-origin' }
+    );
+    if (response.ok) {
+      const data = await response.json();
+      const event = {};
+      event.data = JSON.stringify(data);
+      handleMessage(event);
+      
+      state.isLoggedIn = false;
+      ui.loginButton.innerText = 'LOGIN';
+      state.isChatConnected = false;
+      ui.connectButton.innerText = 'CONNECT'
+
+      // possible bugFix to how connect button hangs
+      // after logout pressed without disconnecting first
+      // : some ws terminate or ws = null statement ???
+      // ... the server destroys ws in logout endpoint
+    } else {
+      throw new Error('Unexpected logout response');
+    }
+  } catch (err) {
+    console.log('Logout error:', err.message);
+  }
+}
 
 
 
@@ -198,31 +241,5 @@ function resetState() {
     isLoggedIn: false,
     isChatConnected: false,
     room: '',
-  }
-}
-
-async function login() {
-  try {
-    console.log(`POST ${URL}/login`)
-    const response = await fetch(
-      `${URL}/login`, 
-      { 
-        method: 'POST', 
-        credentials: 'same-origin'
-      }
-    );
-    
-    if (response.ok) {
-      const data = await response.json();
-      const event = {};
-      event.data = JSON.stringify(data);
-      handleMessage(event);
-      state.isLoggedIn = true;
-      loginButton.innerText = 'LOGOUT';
-    } else {
-      throw new Error('Unexpected login response');
-    }
-  } catch (err) {
-    console.log('Login Error:', err);
   }
 }
