@@ -1,10 +1,12 @@
 import UI from './modules/initUI.js';
 import handler from './modules/handler.js';
 
-const PORT = import.meta.env ? import.meta.env.VITE_PORT : 3000;
-const HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://0.0.0.0`;
-const WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://0.0.0.0`;
-export const URL = `${HTTPS_HOST}:${PORT}`;
+export const ENV = new (function() {
+  this.PORT =  import.meta.env ? import.meta.env.VITE_PORT : 3000
+  this.HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://0.0.0.0`
+  this.WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://0.0.0.0`
+  this.URL = `${this.HTTPS_HOST}:${this.PORT}`
+})()
 
 export let state = {
   isLoggedIn: false,
@@ -15,7 +17,7 @@ export let state = {
 };
 
 let ws;
-export let ui = new UI(handler)
+export let ui = new UI(handler, ws)
 
 // TODO Use session if exists upon document load
 // get handle from session
@@ -71,34 +73,6 @@ export function handleMessage(event) {
 
 
 
-ui.connectButton.addEventListener('click', () => {
-  // Is a toggle button, thus cannot attempt a disconnect when already disconnected
-  // As a result this condition isn't handled in the event handler 
-  if (ws) { 
-    // TMP possible fix
-    // Need this in order to trigger server to send the leave chat room message
-    // notifyLeave();
-
-    ws.onerror = ws.onopen = ws.onclose = null;
-    // TMP fix wip
-    // BUG? using removeEL's causes the client to not receive
-    // an event.type close that triggers the "left chat" chatbox msg.
-    // ws.removeEventListener('open', handleWSEvents);
-    // ws.removeEventListener('message', handleWSEvents);
-    // ws.removeEventListener('error', handleWSEvents);
-    // ws.removeEventListener('close', handleWSEvents);
-    ws.close(1000, 'user intentionally disconnected');
-    // ws = null;
-    state.room = '';
-  } else {
-    // ws = new WebSocket(`wss://${location.host}`);
-    ws = new WebSocket(`${WSS_HOST}:${PORT}`);
-    ws.addEventListener('open', handleWSEvents);
-    ws.addEventListener('message', handleMessage);
-    ws.addEventListener('error', handleWSEvents);
-    ws.addEventListener('close', handleWSEvents);
-  }
-});
 
 ui.sendButton.addEventListener('click', (e) => {
   sendChatMessage(e);
