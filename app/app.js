@@ -13,11 +13,12 @@ export let state = {
   isChatConnected: false,
   room: '',
   handle: '',
-  textInput: ''
+  textInput: '',
+  ws: null
 };
 
-let ws;
-export let ui = new UI(handler, ws)
+// let ws;
+export let ui = new UI(handler)
 
 // TODO Use session if exists upon document load
 // get handle from session
@@ -29,11 +30,6 @@ export let ui = new UI(handler, ws)
 // function handleLoad() {
 //   handler({ type: 'LOGIN' });
 // }
-
-
-
-
-
 
 export function handleMessage(event) {
   // Formats and acts on messages from server
@@ -70,10 +66,6 @@ export function handleMessage(event) {
   }
 }
 
-
-
-
-
 ui.sendButton.addEventListener('click', (e) => {
   sendChatMessage(e);
 })
@@ -84,54 +76,7 @@ ui.userTextInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') sendChatMessage(e);
 })
 
-
-function handleWSEvents(event) {
-  // Dispatches websocket event actions
-  console.log('ws event', event.type)
-  switch (event.type) {
-    case 'error':
-      console.log('WS Error code:', event.code);     
-      break;
-    case 'open':
-      // Can only open if already logged in
-      ui.connectButton.innerText = 'DISCONNECT';
-      state.isChatConnected = true;
-      state.room = 'general';
-      break;
-    case 'close':
-      // WS sends a close event even when a new ws object fails to connect
-      // Thus this case block must:
-      console.log('closeEvent', event);
-      if (!state.isLoggedIn) {              // handle close events when not logged in
-        addChatFromClient(`You must login to site before connected to chat.`);
-      } else if (state.isChatConnected) {   // handle close events when logged in
-        const leaveMessage = {
-          type: 'system',
-          sender: 'cli',
-          time: new Date(),
-          body: `======== You left the chat. Bye! ========`
-        }
-        let event = {};
-        event.data = JSON.stringify(leaveMessage)
-        handleMessage(event);
-        state.isChatConnected = false;
-        state.room = '';
-        ui.connectButton.innerText = 'CONNECT'
-        // ws.destroy();
-        // ws = null;
-
-        // ws.onerror = ws.onopen = ws.onclose = null;
-        // ws.close();
-        ws = null;
-      }
-      break;
-    default:
-      console.log('Unhandled event.type:', event.type)
-  }
-}
-
-
-function addChat(body) {
+export function addChat(body) {
   // TODO concatenates to existing state.chat
   // chatBox.innerHTML updated to state.chat every time this
   // fn invoked.
@@ -139,16 +84,16 @@ function addChat(body) {
   ui.chatBox.scrollTop = chatBox.scrollHeight;   // sets scrollTop to max value
 }
 
-function addChatFromClient(body) {
+export function addChatFromClient(body) {
   addChat(`${Date.now()} [cli] ${body}`)
 }
 
 function sendChatMessage(e) {
-  if (!ws) {
+  if (!state.ws) {
     addChatFromClient(`Cannot send message, you are disconnected`);
     return;
   }
-  console.log('IN sendChatMessage, ws:', ws)
+  console.log('IN sendChatMessage, ws:', state.ws)
   if (userTextInput.value.trim().length > 0) {
     const message = {
       type: 'userSendChat',
@@ -156,7 +101,7 @@ function sendChatMessage(e) {
       time: new Date(),
     }
     const rawMessage = JSON.stringify(message);
-    ws.send(rawMessage);
+    state.ws.send(rawMessage);
   }
   ui.userTextInput.value = '';
 }
@@ -171,7 +116,7 @@ function notifyLeave(e){
     sender: null,
   };
   const rawMessage = JSON.stringify(message);
-  ws.send(rawMessage);
+  state.ws.send(rawMessage);
 }
 
 function resetState() {
