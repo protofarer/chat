@@ -13,7 +13,7 @@ export let state = {
   isLoggedIn: false,
   isChatConnected: false,
   room: '',
-  handle: '',
+  userHandle: '',
   textInput: '',
   ws: null
 };

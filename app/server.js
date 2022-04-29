@@ -133,22 +133,26 @@ server.on('upgrade', (req, socket, head) => {
 wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
   // const userId = req.session.id;
-  const handle = handleNamePool
+  const userHandle = handleNamePool
     .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0];
-  sessionUsers[req.session.id] = { ws, handle };
+  sessionUsers[req.session.id] = { ws, userHandle };
 
   console.log(`user ${req.session.id} connected, current connections (tmp hide dev): `);
   // console.log(Object.keys(sessionUsers));
   
   // Send welcome message to user entering room
   const userWelcomeMessage = {
-    type: "connect",
-    sender: "room-general",
-    time: new Date(),
-    body: "======== Welcome to kenny.net general chat ========",
-    handle: handle,
+    type: "SERVER_WELCOME",
+    payload: {
+      sender: "room-general",
+      time: new Date(),
+      body: "======== Welcome to kenny.net general chat ========",
+      userHandle,
+    }
   };
-  ws.send(JSON.stringify(userWelcomeMessage));   // this sends to clientws.onmessage
+
+  // Send a WS event
+  ws.send(JSON.stringify(userWelcomeMessage));   
   
   // Broadcast entering user to clients
   // console.log(`Broadcasting user ${userId} entrance`);
@@ -156,7 +160,7 @@ wss.on('connection', function (ws, req, client) {
     type: "system",
     sender: "room-general",
     time: new Date(),
-    body: `${handle} entered the chat.`
+    body: `${userHandle} entered the chat.`
   }
   broadcastMessage(roomUserEntryMessage, ws);
   
@@ -166,7 +170,8 @@ wss.on('connection', function (ws, req, client) {
     const message = JSON.parse(rawMessage);
     switch (message.type) {
       case 'userSendChat':
-        message.sender = handle;
+        message.sender = userHandle;
+        message.type = 'SERVER_BROADCAST_CHAT'
         broadcastMessage(message)
         break;
       default:
