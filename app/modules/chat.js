@@ -20,8 +20,12 @@ export function addChatFromClient(body) {
 }
 
 export function addChatFromServer(action) {
+  console.log(typeof action.payload.time)
   addChat(`\
-    (${action.payload.time}) \
+    (${new Date(action.payload.time).toLocaleTimeString(
+      'en-US', 
+      { timeZoneName: 'short' }
+    )}) \
     <strong>[${action.payload.sender}]</strong>: \
     ${action.payload.body}\
   `)
