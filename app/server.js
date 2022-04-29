@@ -146,7 +146,7 @@ wss.on('connection', function (ws, req, client) {
     payload: {
       sender: "room-general",
       time: new Date(),
-      body: `======== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ========`,
+      body: `====== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ======`,
       userHandle,
     }
   }

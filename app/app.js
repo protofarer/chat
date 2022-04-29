@@ -34,8 +34,9 @@ export let ui = new UI(handler)
 // dispatch action: client to logged in state
 
 // Non-UI actions upon user loading page
-// document.onload = handleLoad
+document.onload = handleLoad()
 
-// function handleLoad() {
-//   handler({ type: 'LOGIN' })
-// }
+async function handleLoad() {
+  await handler({ type: 'ASK_LOGIN' })
+  await handler({ type: 'ASK_WS_OPEN' })
+}

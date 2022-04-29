@@ -1,5 +1,3 @@
-import { addChat } from "./chat.js"
-
 export default class Message {
 
   static send(ws, message) {

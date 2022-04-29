@@ -1,4 +1,4 @@
-import { state, ENV } from '../app.js'
+import { state } from '../app.js'
 
 export default class UI {
   constructor(handler) {
