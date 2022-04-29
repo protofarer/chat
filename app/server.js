@@ -44,13 +44,15 @@ app.post('/login', (req, res) => {
   // res.set('Access-Control-Allow-Origin', '*');   // exclude, cors mw covers
   // Send as string so it is processed consistently in client handleMessage()
   // console.log('(IN /login) req.session.id:', req.session.id); // these id are artifacts unrelated to the session when it is established aka PARSED
-  res.send(JSON.stringify({ 
-    result: 'OK', 
+  const message = {
     type: 'system',
-    sender: 'knet',
-    body: `You logged in.`,
-    time: new Date()
-  }));
+    payload: {
+      sender: 'knet',
+      body: `You logged in.`,
+      time: new Date()
+    }
+  }
+  res.send(JSON.stringify(message));
 });
 
 app.post('/logout', (req, res) => {
