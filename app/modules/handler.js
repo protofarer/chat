@@ -5,7 +5,7 @@ import {
   ui
 } from '../app.js'
 import { addChat, addChatFromClient } from './chat.js'
-import Message from './Message.js';
+import Message from './Message.js'
 
 export default async function handler(action) {
   console.log('action.type:', action.type)
@@ -17,20 +17,27 @@ export default async function handler(action) {
     // ***
 
     case 'ASK_LOGIN':
-      const loginMessage = await login();
+      const loginMessage = await login()
       handler(loginMessage)
-      break;
+      break
 
     case 'ASK_LOGOUT':
-      const logoutData = await logout();
-      state.isLoggedIn = false;
-      state.isChatConnected = false;
-      Message.handle(logoutData);
+      const logoutData = await logout()
+      state.isLoggedIn = false
+      state.isChatConnected = false
+      Message.handle(logoutData)
+      break
+
+    case 'DENY_LOGOUT':
+      addChatFromClient('\
+        You must disconnect from chat before logging out. \
+        <auto-disconnect will be enable in future release>\
+      ')
       break;
 
     case 'SEND_FAIL_WHILE_DISCONNECTED':
-      addChatFromClient(`Cannot send message, you are disconnected`);
-      break;
+      addChatFromClient(`Cannot send message, you are disconnected`)
+      break
 
     case 'SEND_CHAT':
       const chatMessage = {
@@ -40,12 +47,12 @@ export default async function handler(action) {
           time: new Date(),
         }
       }
-      Message.send(state.ws, chatMessage);
-      break;
+      Message.send(state.ws, chatMessage)
+      break
     
-      case 'WS_CLOSE_WHILE_LOGGEDOUT':
-      addChatFromClient(`You must login to site before connected to chat.`);
-      break;
+    case 'WS_CLOSE_WHILE_LOGGEDOUT':
+      addChatFromClient(`You must login to site before connected to chat.`)
+      break
     
 
     // ***
@@ -53,18 +60,33 @@ export default async function handler(action) {
     // ***
 
     case 'SERVER_LOGIN':
-      state.isLoggedIn = true;
-      addChat(`(${action.payload.time}) <strong>[${action.payload.sender}]</strong>: ${action.payload.body}`);
-      break;
+      state.isLoggedIn = true
+      addChat(`\
+        (${action.payload.time}) \
+        <strong>[${action.payload.sender}]</strong>: \
+        ${action.payload.body}\
+      `)
+      break
 
     case 'SERVER_WELCOME':
-      state.userHandle = action.payload.userHandle;
-      addChat(`(${action.payload.time}) <strong>[${state.userHandle}]</strong>: ${action.payload.body}`);
-      break;
+      state.userHandle = action.payload.userHandle
+      addChat(`\
+        (${action.payload.time}) \
+        <strong>[${state.userHandle}]</strong>: \
+        ${action.payload.body}\
+      `)
+      break
 
     case 'SERVER_BROADCAST_CHAT':
-      addChat(`(${action.payload.time}) <strong>${state.userHandle}</strong>: ${action.payload.body}`)
-      break;
+      addChat(`\
+        (${action.payload.time}) \
+        <strong>${state.userHandle}</strong>: \
+        ${action.payload.body}\
+      `)
+      break
+    case 'SERVER_BROADCAST_ENTRY':
+      // TODO add to usersList
+
 
 
     // ***
@@ -73,24 +95,24 @@ export default async function handler(action) {
 
     case 'ASK_WS_OPEN':
       // CSDR await?
-      // ws = new WebSocket(`wss://${location.host}`);
-      state.ws = new WebSocket(`${ENV.WSS_HOST}:${ENV.PORT}`);
-      state.ws.addEventListener('open', handleWSEvents.bind(this));
-      state.ws.addEventListener('message', handleWSEvents.bind(this));
-      state.ws.addEventListener('error', handleWSEvents.bind(this));
-      state.ws.addEventListener('close', handleWSEvents.bind(this));
-      break;
+      // ws = new WebSocket(`wss://${location.host}`)
+      state.ws = new WebSocket(`${ENV.WSS_HOST}:${ENV.PORT}`)
+      state.ws.addEventListener('open', handleWSEvents.bind(this))
+      state.ws.addEventListener('message', handleWSEvents.bind(this))
+      state.ws.addEventListener('error', handleWSEvents.bind(this))
+      state.ws.addEventListener('close', handleWSEvents.bind(this))
+      break
     
     case 'ASK_WS_CLOSE':
       addChatFromClient(`======== You left the chat. Bye! ========`)
-      state.isChatConnected = false;
-      state.room = '';
+      state.isChatConnected = false
+      state.room = ''
 
-      // PREEMPTIVE CLIENT CLOSE OR ENSURE SERVER CLOSES?
-      state.ws.close(1000, 'user intentionally disconnected');
-      state.ws.onerror = state.ws.onopen = state.ws.onclose = null;
-      state.ws = null;
-      break;
+      // Client closes itself without server response
+      state.ws.close(1000, 'user intentionally disconnected')
+      state.ws.onerror = state.ws.onopen = state.ws.onclose = null
+      state.ws = null
+      break
 
 
     // ***
@@ -98,23 +120,25 @@ export default async function handler(action) {
     // ***
 
     case 'WS_OPEN':
-      state.isChatConnected = true;
-      state.room = 'general';
-      break;
+      state.isChatConnected = true
+      state.room = 'general'
+      break
     case 'WS_CLOSE':
       console.log('ws.close from server, unsure if this case reachable')
-      addChatFromClient(`======== The server closed your connect. Adios! ========`)
-      state.isChatConnected = false;
-      state.room = '';
-      state.ws.close(1000, 'confirm server ws.close');
-      state.ws.onerror = state.ws.onopen = state.ws.onclose = null;
-      state.ws = null;
-      break;
+      addChatFromClient(`\
+        ======== The server closed your connect. Adios! ========\
+      `)
+      state.isChatConnected = false
+      state.room = ''
+      state.ws.close(1000, 'confirm server ws.close')
+      state.ws.onerror = state.ws.onopen = state.ws.onclose = null
+      state.ws = null
+      break
 
     default:
       console.log('unhandled action:', action)
   }
-  ui.update();
+  ui.update()
 }
 
 function handleWSEvents(event) {
@@ -122,12 +146,12 @@ function handleWSEvents(event) {
   console.log('ws event.type', event.type)
   switch (event.type) {
     case 'error':
-      console.log('WS Error code:', event.code);     
-      break;
+      console.log('WS Error code:', event.code)     
+      break
     case 'open':
       // Can only open if already logged in
       handler({ type: 'WS_OPEN' })
-      break;
+      break
     case 'close':
       // WS sends a close event even when a new ws object fails to connect
       // Thus this case block must:
@@ -136,12 +160,12 @@ function handleWSEvents(event) {
       } else if (state.isChatConnected) {   // handle close events when logged in
         handler({ type: 'WS_CLOSE' })
       }
-      break;
+      break
     case 'message':
       console.log('raw message event from server', event)
-      const message = Message.parseEventData(event);
-      handler(message);
-      break;
+      const message = Message.parseEventData(event)
+      handler(message)
+      break
     default:
       console.log('Unhandled event.type:', event.type)
   }
@@ -153,11 +177,11 @@ async function login() {
     const response = await fetch(
       `${ENV.URL}/login`, 
       { method: 'POST', credentials: 'same-origin' }
-    );
+    )
     
     return response.ok 
       ? await response.json()
-      : new Error('Unexpected login response');
+      : new Error('Unexpected login response')
   } catch (err) {
     throw new Error(`Unhandled logout error: ${err.message}`)
   }
@@ -168,10 +192,10 @@ async function logout() {
     const response = await fetch(
       `${ENV.URL}/logout`,
       { method: 'POST', credentials: 'same-origin' }
-    );
+    )
     return response.ok
       ? await response.json()
-      : new Error('Unexpected logout response');
+      : new Error('Unexpected logout response')
   } catch (err) {
     throw new Error(`Unhandled logout error: ${err.message}`)
   }

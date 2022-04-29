@@ -1,6 +1,6 @@
-import UI from './modules/initUI.js';
-import handler from './modules/handler.js';
-import { addChat } from './modules/chat.js';
+import UI from './modules/initUI.js'
+import handler from './modules/handler.js'
+import { addChat } from './modules/chat.js'
 
 export const ENV = new (function() {
   this.PORT =  import.meta.env ? import.meta.env.VITE_PORT : 3000
@@ -16,9 +16,9 @@ export let state = {
   userHandle: '',
   textInput: '',
   ws: null
-};
+}
 
-// let ws;
+// let ws
 export let ui = new UI(handler)
 
 // TODO Use session if exists upon document load
@@ -26,10 +26,10 @@ export let ui = new UI(handler)
 // dispatch action: client to logged in state
 
 // Non-UI actions upon user loading page
-// document.onload = handleLoad;
+// document.onload = handleLoad
 
 // function handleLoad() {
-//   handler({ type: 'LOGIN' });
+//   handler({ type: 'LOGIN' })
 // }
 
 function notifyLeave(e){
@@ -40,9 +40,9 @@ function notifyLeave(e){
     body: null,
     time: Date.now(),
     sender: null,
-  };
-  const rawMessage = JSON.stringify(message);
-  state.ws.send(rawMessage);
+  }
+  const rawMessage = JSON.stringify(message)
+  state.ws.send(rawMessage)
 }
 
 function resetState() {
