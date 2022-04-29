@@ -1,5 +1,6 @@
 import UI from './modules/initUI.js';
 import handler from './modules/handler.js';
+import { addChat } from './modules/chat.js';
 
 export const ENV = new (function() {
   this.PORT =  import.meta.env ? import.meta.env.VITE_PORT : 3000
@@ -36,6 +37,10 @@ export function handleMessage(event) {
 
   // TODO check and handle event typeof (server message passing)
   // TODO check and handle object typeof (local message passing)
+
+  // ***
+  // Make parse function under Message class
+  // ***
   const message = JSON.parse(event.data);   // TODO JSON.parse replacer for time property
   console.log('handleMessage event.data', message)
   // Dispatches messages from server
@@ -44,6 +49,9 @@ export function handleMessage(event) {
     'en-US', 
     { timeZoneName: 'short' }
   );
+  // ***
+  // ***
+
   switch (type) {
     case 'system':
       // TODO setup style around here
@@ -66,45 +74,8 @@ export function handleMessage(event) {
   }
 }
 
-ui.sendButton.addEventListener('click', (e) => {
-  sendChatMessage(e);
-})
-// CSDR better way to do this without making it a form... \
-// or should it be a form? eg POST to route with userId and data?...
-// how does a form accomplish this?
-ui.userTextInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') sendChatMessage(e);
-})
 
-export function addChat(body) {
-  // TODO concatenates to existing state.chat
-  // chatBox.innerHTML updated to state.chat every time this
-  // fn invoked.
-  ui.chatBox.innerHTML += `${body}<br />`;
-  ui.chatBox.scrollTop = chatBox.scrollHeight;   // sets scrollTop to max value
-}
 
-export function addChatFromClient(body) {
-  addChat(`${Date.now()} [cli] ${body}`)
-}
-
-function sendChatMessage(e) {
-  if (!state.ws) {
-    addChatFromClient(`Cannot send message, you are disconnected`);
-    return;
-  }
-  console.log('IN sendChatMessage, ws:', state.ws)
-  if (userTextInput.value.trim().length > 0) {
-    const message = {
-      type: 'userSendChat',
-      body: ui.userTextInput.value,
-      time: new Date(),
-    }
-    const rawMessage = JSON.stringify(message);
-    state.ws.send(rawMessage);
-  }
-  ui.userTextInput.value = '';
-}
 
 function notifyLeave(e){
   // Notify WSServer connection is closing
