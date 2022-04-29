@@ -21,7 +21,7 @@ const sessionParser = session({
   resave: false
 })
 
-// app.use(cors())
+app.use(cors())
 app.use(express.static(path.resolve(__dirname, '.')))
 app.use(sessionParser)
 
@@ -46,6 +46,8 @@ app.post('/login', (req, res) => {
       time: new Date()
     }
   }
+  // res.set("Access-Control-Allow-Origin", "https://192.168.1.200:3000")
+  // res.set("Access-Control-Allow-Origin", "*")
   res.send(JSON.stringify(message))
 })
 
@@ -143,7 +145,7 @@ wss.on('connection', function (ws, req, client) {
     payload: {
       sender: "room-general",
       time: new Date(),
-      body: "======== Welcome to kenny.net general chat ========",
+      body: `======== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ========`,
       userHandle,
     }
   }
@@ -156,18 +158,17 @@ wss.on('connection', function (ws, req, client) {
     payload: {
       sender: "room-general",
       time: new Date(),
-      body: `${userHandle} entered the chat.`
+      body: `<em>${userHandle}</em> entered the chat.`
     }
   }
   broadcastMessage(roomUserEntryMessage, ws)
-  
-  // TODO send msg to update usersList
+  // TODO broadcast msg to update usersList
 
   ws.on('message', function (rawMessage) {
     const message = JSON.parse(rawMessage)
     switch (message.type) {
       case 'userSendChat':
-        message.sender = userHandle
+        message.payload.sender = userHandle
         message.type = 'SERVER_BROADCAST_CHAT'
         broadcastMessage(message)
         break
@@ -176,14 +177,14 @@ wss.on('connection', function (ws, req, client) {
     }
   })
 
-  ws.on('close', function (close) {
-    console.debug('closeEvent', close)
-    // console.debug('closeReason', closeReason)
+  ws.on('close', function () {
     const roomUserLeft = {
-      type: "system",
-      sender: "room-general",
-      time: new Date(),
-      body: `${userHandle} left the chat.`
+      type: "SERVER_BROADCAST_LEAVE",
+      payload: {
+        sender: "room-general",
+        time: new Date(),
+        body: `<em>${userHandle}</em> left the chat.`
+      }
     }
     broadcastMessage(roomUserLeft)
 

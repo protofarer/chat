@@ -30,7 +30,6 @@ export default class {
         this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
         return
       }
-      console.log('IN sendChatMessage, ws:', state.ws)
       if (this.userTextInput.value.trim().length > 0) {
         this.handler({ type: 'SEND_CHAT' })
         this.userTextInput.value = ''

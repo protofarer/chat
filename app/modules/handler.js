@@ -72,7 +72,7 @@ export default async function handler(action) {
       state.userHandle = action.payload.userHandle
       addChat(`\
         (${action.payload.time}) \
-        <strong>[${state.userHandle}]</strong>: \
+        <strong>[${action.payload.sender}]</strong>: \
         ${action.payload.body}\
       `)
       break
@@ -80,13 +80,27 @@ export default async function handler(action) {
     case 'SERVER_BROADCAST_CHAT':
       addChat(`\
         (${action.payload.time}) \
-        <strong>${state.userHandle}</strong>: \
+        <strong>${action.payload.sender}</strong>: \
         ${action.payload.body}\
       `)
       break
+
     case 'SERVER_BROADCAST_ENTRY':
       // TODO add to usersList
+      addChat(`\
+        (${action.payload.time}) \
+        <strong>${action.payload.sender}</strong>: \
+        ${action.payload.body}\
+      `)
+      break
 
+    case 'SERVER_BROADCAST_LEAVE':
+      addChat(`\
+        (${action.payload.time}) \
+        <strong>${action.payload.sender}</strong>: \
+        ${action.payload.body}\
+      `)
+      break
 
 
     // ***
@@ -124,13 +138,17 @@ export default async function handler(action) {
       state.room = 'general'
       break
     case 'WS_CLOSE':
-      console.log('ws.close from server, unsure if this case reachable')
+      // reachable when server restarts or sends its close signal first
       addChatFromClient(`\
         ======== The server closed your connect. Adios! ========\
       `)
       state.isChatConnected = false
       state.room = ''
+      
+      // server doesn't receive this close event if the ws.close
+      // initiated by server
       state.ws.close(1000, 'confirm server ws.close')
+
       state.ws.onerror = state.ws.onopen = state.ws.onclose = null
       state.ws = null
       break
@@ -183,7 +201,11 @@ async function login() {
       ? await response.json()
       : new Error('Unexpected login response')
   } catch (err) {
-    throw new Error(`Unhandled logout error: ${err.message}`)
+    if (err.name === 'TypeError') {
+      console.error(`${err.message}`)
+    } else {
+      throw new Error(`Unhandled logout error: ${err}`)
+    } 
   }
 }
 
