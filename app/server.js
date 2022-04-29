@@ -45,7 +45,7 @@ app.post('/login', (req, res) => {
   // Send as string so it is processed consistently in client handleMessage()
   // console.log('(IN /login) req.session.id:', req.session.id); // these id are artifacts unrelated to the session when it is established aka PARSED
   const message = {
-    type: 'system',
+    type: 'SERVER_LOGIN',
     payload: {
       sender: 'knet',
       body: `You logged in.`,
@@ -68,11 +68,12 @@ app.post('/logout', (req, res) => {
     }
 
     res.send(JSON.stringify({ 
-      result: 'OK', 
       type: 'system',
-      sender: 'knet',
-      body: `You are logged out.`,
-      time: new Date(),
+      payload: {
+        sender: 'knet',
+        body: `You are logged out.`,
+        time: new Date(),
+      }
     }));
   });
 });
@@ -186,7 +187,7 @@ wss.on('connection', function (ws, req, client) {
       type: "system",
       sender: "room-general",
       time: new Date(),
-      body: `${handle} left the chat.`
+      body: `${userHandle} left the chat.`
     };
     broadcastMessage(roomUserLeft);
 

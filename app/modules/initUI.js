@@ -1,5 +1,4 @@
 import { state, ENV } from '../app.js'
-import handler from './handler.js';
 import { addChatFromClient } from './chat.js';
 import Message from './Message.js';
 
@@ -28,19 +27,19 @@ export default class {
     
     function handleSend() {
       if (!state.ws) {
-        handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
+        this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
         return;
       }
       console.log('IN sendChatMessage, ws:', state.ws)
       if (this.userTextInput.value.trim().length > 0) {
-        handler({ type: 'SEND_CHAT' })
+        this.handler({ type: 'SEND_CHAT' })
         this.userTextInput.value = '';
       }
     }
 
     async function handleLogin() {
       if (!state.isLoggedIn) {
-        this.handler({type: 'LOGIN'})
+        this.handler({type: 'ASK_LOGIN'})
       } else {
         if (state.isChatConnected) {
           // TYPE DENY_LOGOUT
@@ -48,7 +47,7 @@ export default class {
             logging out. <auto-disconnect will be enable in future \
             release>');
         } else {
-          this.handler({type: 'LOGOUT'})
+          this.handler({type: 'ASK_LOGOUT'})
         }
       }
     }
@@ -56,11 +55,16 @@ export default class {
       // Is a toggle button, thus cannot attempt a disconnect when already disconnected
       // As a result this condition isn't handled in the event handler 
       if (state.ws) { 
+        this.handler({ type: 'ASK_WS_CLOSE' })
         // TMP possible fix
         // Need this in order to trigger server to send the leave chat room message
         // notifyLeave();
 
-        state.ws.onerror = state.ws.onopen = state.ws.onclose = null;
+        // state.ws.onerror = state.ws.onopen = state.ws.onclose = null;
+        // state.ws.close(1000, 'user intentionally disconnected');
+        // state.room = '';
+
+
         // TMP fix wip
         // BUG? using removeEL's causes the client to not receive
         // an event.type close that triggers the "left chat" chatbox msg.
@@ -68,46 +72,10 @@ export default class {
         // ws.removeEventListener('message', handleWSEvents);
         // ws.removeEventListener('error', handleWSEvents);
         // ws.removeEventListener('close', handleWSEvents);
-        state.ws.close(1000, 'user intentionally disconnected');
         // ws = null;
-        state.room = '';
       } else {
-          // ws = new WebSocket(`wss://${location.host}`);
-        state.ws = new WebSocket(`${ENV.WSS_HOST}:${ENV.PORT}`);
-        state.ws.addEventListener('open', handleWSEvents.bind(this));
-        state.ws.addEventListener('message', handleWSEvents.bind(this));
-        state.ws.addEventListener('error', handleWSEvents.bind(this));
-        state.ws.addEventListener('close', handleWSEvents.bind(this));
+        this.handler({ type: 'ASK_WS_OPEN' })
       
-        function handleWSEvents(event) {
-          // Dispatches websocket event actions
-          console.log('ws event.type', event.type)
-          switch (event.type) {
-            case 'error':
-              console.log('WS Error code:', event.code);     
-              break;
-            case 'open':
-              // Can only open if already logged in
-              handler({ type: 'WS_OPEN' })
-              break;
-            case 'close':
-              // WS sends a close event even when a new ws object fails to connect
-              // Thus this case block must:
-              if (!state.isLoggedIn) {              // handle close events when not logged in
-                handler({ type: 'WS_CLOSE_WHILE_LOGGEDOUT'})
-              } else if (state.isChatConnected) {   // handle close events when logged in
-                handler({ type: 'WS_CLOSE_WHILE_LOGGEDIN' })
-              }
-              break;
-            case 'message':
-              console.log('raw message event from server', event)
-              const message = Message.parseEventData(event);
-              handler(message);
-              break;
-            default:
-              console.log('Unhandled event.type:', event.type)
-          }
-        }
       }
     };
   }
