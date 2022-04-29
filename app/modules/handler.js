@@ -4,7 +4,7 @@ import {
   ENV,
   ui
 } from '../app.js'
-import { addChat, addChatFromClient } from './chat.js'
+import { addChat, addChatFromClient, addChatFromServer } from './chat.js'
 import Message from './Message.js'
 
 export default async function handler(action) {
@@ -25,7 +25,7 @@ export default async function handler(action) {
       const logoutData = await logout()
       state.isLoggedIn = false
       state.isChatConnected = false
-      Message.handle(logoutData)
+      handler(logoutData)
       break
 
     case 'DENY_LOGOUT':
@@ -50,7 +50,7 @@ export default async function handler(action) {
       Message.send(state.ws, chatMessage)
       break
     
-    case 'WS_CLOSE_WHILE_LOGGEDOUT':
+    case 'DENY_WS_CLOSE_WHILE_LOGGEDOUT':
       addChatFromClient(`You must login to site before connected to chat.`)
       break
     
@@ -61,45 +61,30 @@ export default async function handler(action) {
 
     case 'SERVER_LOGIN':
       state.isLoggedIn = true
-      addChat(`\
-        (${action.payload.time}) \
-        <strong>[${action.payload.sender}]</strong>: \
-        ${action.payload.body}\
-      `)
+      addChatFromServer(action)
+      break
+
+    case 'SERVER_LOGOUT':
+      state.isLoggedIn = false
+      addChatFromServer(action)
       break
 
     case 'SERVER_WELCOME':
       state.userHandle = action.payload.userHandle
-      addChat(`\
-        (${action.payload.time}) \
-        <strong>[${action.payload.sender}]</strong>: \
-        ${action.payload.body}\
-      `)
+      addChatFromServer(action)
       break
 
     case 'SERVER_BROADCAST_CHAT':
-      addChat(`\
-        (${action.payload.time}) \
-        <strong>${action.payload.sender}</strong>: \
-        ${action.payload.body}\
-      `)
+      addChatFromServer(action)
       break
 
     case 'SERVER_BROADCAST_ENTRY':
       // TODO add to usersList
-      addChat(`\
-        (${action.payload.time}) \
-        <strong>${action.payload.sender}</strong>: \
-        ${action.payload.body}\
-      `)
+      addChatFromServer(action)
       break
 
     case 'SERVER_BROADCAST_LEAVE':
-      addChat(`\
-        (${action.payload.time}) \
-        <strong>${action.payload.sender}</strong>: \
-        ${action.payload.body}\
-      `)
+      addChatFromServer(action)
       break
 
 
@@ -174,7 +159,7 @@ function handleWSEvents(event) {
       // WS sends a close event even when a new ws object fails to connect
       // Thus this case block must:
       if (!state.isLoggedIn) {              // handle close events when not logged in
-        handler({ type: 'WS_CLOSE_WHILE_LOGGEDOUT'})
+        handler({ type: 'DENY_WS_CLOSE_WHILE_LOGGEDOUT'})
       } else if (state.isChatConnected) {   // handle close events when logged in
         handler({ type: 'WS_CLOSE' })
       }

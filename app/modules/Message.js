@@ -10,7 +10,6 @@ export default class Message {
   }
 
   static parse(data) {
-    // console.log('data',data)
     const message = JSON.parse(data)   // TODO JSON.parse replacer for time property
     message.payload.time = new Date(message.payload.time).toLocaleTimeString(
       'en-US', 
@@ -24,23 +23,18 @@ export default class Message {
   }
 
   static handle(data) {
-  // Formats and acts on messages from server
+    // Formats and acts on messages from server
 
-  // OPT check and handle event typeof (server message passing)
-  // OPT check and handle object typeof (local message passing, making use of this data model)
+    // OPT check and handle event typeof (server message passing)
+    // OPT check and handle object typeof (local message passing, making use of this data model)
   
-    // const data = JSON.stringify(event)
-    // const { type, sender, time, body } = Message.parse(event)
-
     const { sender, time, body } = data.payload
 
     switch (data.type) {
       case 'system':
-        // TODO setup style around here
         addChat(`(${time}) <strong>[${sender}]</strong>: ${body}`)
         break
       case 'userSendChat':
-        // TODO setup style around here
         break
       default:
         console.log('Unhandled message.type:', message.type)

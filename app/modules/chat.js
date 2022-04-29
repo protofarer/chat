@@ -9,5 +9,20 @@ export function addChat(body) {
 }
 
 export function addChatFromClient(body) {
-  addChat(`${Date.now()} [cli] ${body}`)
+  addChat(`\
+    (${new Date().toLocaleTimeString(
+      'en-US', 
+      { timeZoneName: 'short' }
+    )}) \
+    <strong>[cli]</strong> \
+    ${body}\
+  `)
+}
+
+export function addChatFromServer(action) {
+  addChat(`\
+    (${action.payload.time}) \
+    <strong>[${action.payload.sender}]</strong>: \
+    ${action.payload.body}\
+  `)
 }

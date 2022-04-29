@@ -64,14 +64,15 @@ app.post('/logout', (req, res) => {
       ws.close()
     }
 
-    res.send(JSON.stringify({ 
-      type: 'system',
+    const message = {
+      type: 'SERVER_LOGOUT',
       payload: {
         sender: 'knet',
         body: `You are logged out.`,
         time: new Date(),
       }
-    }))
+    }
+    res.send(JSON.stringify(message))
   })
 })
 
@@ -192,6 +193,7 @@ wss.on('connection', function (ws, req, client) {
     delete sessionUsers[req.session.id]
     console.log(`user ${req.session.id} Client disconnected, current connections(tmp hide dev): `)
     // console.log(`${Object.keys(sessionUsers)}`)
+
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
     // ws.termiante equiv to node socket.destroy()
     // ws.terminate()
