@@ -93,9 +93,7 @@ export default async function handler(action) {
     case 'SERVER_BROADCAST_LEAVE':
       addChatFromServer(action)
       console.log(`server userslist on leave`, action.payload.usersList)
-      
       state.usersList = action.payload.usersList
-      // UsersList.removeUsersList(action.payload.userHandle)
       break
 
 
