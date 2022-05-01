@@ -200,7 +200,7 @@ wss.on('connection', function (ws, req, client) {
   })
 
   function broadcastMessage(message, ws=null) {
-    console.log(`Broadcasting message "${message.body}" from user ${message.sender}`)  // TODO make this work
+    console.log(`Broadcasting message "${message.payload.body}" from sender ${message.payload.sender}`)  // TODO make this work
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN && client !== ws) {
         client.send(JSON.stringify(message))
