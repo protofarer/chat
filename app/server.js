@@ -159,7 +159,8 @@ wss.on('connection', function (ws, req, client) {
     payload: {
       sender: "room-general",
       time: new Date(),
-      body: `<em>${userHandle}</em> entered the chat.`
+      body: `<em>${userHandle}</em> entered the chat.`,
+      userHandle
     }
   }
   broadcastMessage(roomUserEntryMessage, ws)

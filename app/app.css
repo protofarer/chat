@@ -140,13 +140,14 @@ button:hover, button:focus {
 }
 
 #chatContainer {
-  display: flex;
-  flex-flow: row nowrap;
   min-height: 3rem;
   height: 60vh;
   max-height: 40rem;
   border: 6px double var(--harmonyLineColor-dull);
   border-radius: 6px;
+
+  display: flex;
+  flex-flow: row nowrap;
 }
 
 /* LOL the double borders pad the element */
@@ -199,8 +200,9 @@ button:hover, button:focus {
   color: var(--focusColor);
   font-weight: bolder;
   background-color: var(--colorTransparent);
-  flex-grow: 4;
   border-right: 5px dotted var(--chaosLineColor-dull);
+
+  flex-grow: 4;
 }
 #inputPanel > input:hover,
 #inputPanel > input:focus {
@@ -209,6 +211,7 @@ button:hover, button:focus {
 
 #inputPanel > button {
   margin: 0;
+  padding: 0;
   min-width: 150px;
   border: none;  
   color: var(--chaosLineColor);

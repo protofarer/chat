@@ -81,10 +81,12 @@ export default async function handler(action) {
     case 'SERVER_BROADCAST_ENTRY':
       // TODO add to usersList
       addChatFromServer(action)
+      addUsersList(action.payload.userHandle)
       break
 
     case 'SERVER_BROADCAST_LEAVE':
       addChatFromServer(action)
+      removeUsersList(action.payload.userHandle)
       break
 
 
@@ -204,4 +206,13 @@ async function logout() {
   } catch (err) {
     throw new Error(`Unhandled logout error: ${err.message}`)
   }
+}
+
+function addUsersList(userHandle) {
+  
+
+}
+
+function removeUsersList(userHandle) {
+
 }

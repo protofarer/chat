@@ -20,7 +20,6 @@ export function addChatFromClient(body) {
 }
 
 export function addChatFromServer(action) {
-  console.log(typeof action.payload.time)
   addChat(`\
     (${new Date(action.payload.time).toLocaleTimeString(
       'en-US', 

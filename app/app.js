@@ -1,4 +1,4 @@
-import UI from './modules/initUI.js'
+import UI from './modules/UI.js'
 import handler from './modules/handler.js'
 
 export const ENV = new (function() {
