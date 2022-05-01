@@ -19,11 +19,7 @@ export let state = {
   
   ws: null,
 
-  users: {
-  },
-  
-  usersCounter: 0,
-  
+  usersList: [],
 }
 
 export function resetState() {

@@ -72,9 +72,10 @@ export default async function handler(action) {
 
     case 'SERVER_WELCOME':
       state.userHandle = action.payload.userHandle
-      action.payload.usersList.forEach(user => {
-        UsersList.addUsersList(user)
-      })
+      state.usersList = action.payload.usersList
+      // action.payload.usersList.forEach(user => {
+      //   UsersList.addUsersList(user)
+      // })
       addChatFromServer(action)
       break
 
@@ -85,12 +86,16 @@ export default async function handler(action) {
     case 'SERVER_BROADCAST_ENTRY':
       // TODO add to usersList
       addChatFromServer(action)
-      UsersList.addUsersList(action.payload.userHandle)
+      state.usersList = action.payload.usersList
+      // UsersList.addUsersList(action.payload.userHandle)
       break
 
     case 'SERVER_BROADCAST_LEAVE':
       addChatFromServer(action)
-      UsersList.removeUsersList(action.payload.userHandle)
+      console.log(`server userslist on leave`, action.payload.usersList)
+      
+      state.usersList = action.payload.usersList
+      // UsersList.removeUsersList(action.payload.userHandle)
       break
 
 
@@ -112,6 +117,7 @@ export default async function handler(action) {
       addChatFromClient(`====== You left the chat. Bye! ======`)
       state.isChatConnected = false
       state.room = ''
+      state.usersList = []
 
       // Client closes itself without server response
       state.ws.close(1000, 'user intentionally disconnected')

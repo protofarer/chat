@@ -145,15 +145,8 @@ wss.on('connection', function (ws, req, client) {
     // console.log(Object.keys(sessionUsers))
     
     // Send welcome message to user entering room
-    const usersList = []
-    console.debug(`sessionUsers values`, Object.values(sessionUsers).map( o => o.userHandle))
     
-    // REFACT make concise, w/o using the usersList variable...
-    // ... Object.values(sessionUsers)
-    // for (let k in sessionUsers) {
-    //   console.debug(`sessionusers userhandle`, sessionUsers[k].userHandle)
-    //   usersList.push(sessionUsers[k].userHandle)
-    // }
+    const usersList = Object.values(sessionUsers).map(o => o.userHandle)
 
     const userWelcomeMessage = {
       type: "SERVER_WELCOME",
@@ -162,11 +155,9 @@ wss.on('connection', function (ws, req, client) {
         time: new Date(),
         body: `====== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ======`,
         userHandle,
-        usersList: Object.values(sessionUsers).map(o => o.userHandle)
+        usersList
       }
     }
-    console.debug(`usersList`, userWelcomeMessage.users)
-    
     ws.send(JSON.stringify(userWelcomeMessage))   
     
     // Broadcast entering user to clients
@@ -177,7 +168,8 @@ wss.on('connection', function (ws, req, client) {
         sender: "room-general",
         time: new Date(),
         body: `<em>${userHandle}</em> entered the chat.`,
-        userHandle
+        userHandle,
+        usersList
       }
     }
     broadcastMessage(roomUserEntryMessage, ws)
@@ -199,21 +191,20 @@ wss.on('connection', function (ws, req, client) {
 
   ws.on('close', function () {
 
-    // TODO send msg to update usersList
-    delete sessionUsers[req.session.id]
-    console.log(`user ${req.session.id} Client disconnected, current connections(tmp hide dev): `)
-    // console.log(`${Object.keys(sessionUsers)}`)
-    
     const roomUserLeft = {
       type: "SERVER_BROADCAST_LEAVE",
       payload: {
         sender: "room-general",
         time: new Date(),
-        body: `<em>${userHandle}</em> left the chat.`,
-        usersList: Object.values(sessionUsers).map(o => o.userHandle)
+        body: `<em>${sessionUsers[req.session.id].userHandle}</em> left the chat.`,
       }
     }
+    delete sessionUsers[req.session.id]
+    roomUserLeft.payload.usersList = Object.values(sessionUsers).map(o => o.userHandle)
     broadcastMessage(roomUserLeft)
+    console.log(`user ${req.session.id} Client disconnected, current connections(tmp hide dev): `)
+    // console.log(`${Object.keys(sessionUsers)}`)
+    
 
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
     // ws.termiante equiv to node socket.destroy()
