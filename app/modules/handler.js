@@ -112,8 +112,6 @@ export default async function handler(action) {
       state.ws.onerror = state.ws.onopen = state.ws.onclose = null
       state.ws = null
       break
-
-
     // ***
     // * WebSocket Server Receipts
     // ***
