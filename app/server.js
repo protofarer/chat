@@ -133,38 +133,56 @@ server.on('upgrade', (req, socket, head) => {
 
 wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
-  const userHandle = handleNamePool
-    .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0]
-  sessionUsers[req.session.id] = { ws, userHandle }
+  if (handleNamePool.length === 0) {
+    console.debug(`handleNamePool empty, broadcast room full`, )
+    throw new Error(`ran out of assignable usernames aka room full, debugme`)
+  } else {
+    const userHandle = handleNamePool
+      .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0]
+    sessionUsers[req.session.id] = { ws, userHandle }
+  
+    console.log(`user ${req.session.id} connected, current connections (tmp hide dev): `)
+    // console.log(Object.keys(sessionUsers))
+    
+    // Send welcome message to user entering room
+    const usersList = []
+    console.debug(`sessionUsers values`, Object.values(sessionUsers).map( o => o.userHandle))
+    
+    // REFACT make concise, w/o using the usersList variable...
+    // ... Object.values(sessionUsers)
+    // for (let k in sessionUsers) {
+    //   console.debug(`sessionusers userhandle`, sessionUsers[k].userHandle)
+    //   usersList.push(sessionUsers[k].userHandle)
+    // }
 
-  console.log(`user ${req.session.id} connected, current connections (tmp hide dev): `)
-  // console.log(Object.keys(sessionUsers))
-  
-  // Send welcome message to user entering room
-  const userWelcomeMessage = {
-    type: "SERVER_WELCOME",
-    payload: {
-      sender: "room-general",
-      time: new Date(),
-      body: `====== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ======`,
-      userHandle,
+    const userWelcomeMessage = {
+      type: "SERVER_WELCOME",
+      payload: {
+        sender: "room-general",
+        time: new Date(),
+        body: `====== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ======`,
+        userHandle,
+        usersList: Object.values(sessionUsers).map(o => o.userHandle)
+      }
     }
-  }
-  ws.send(JSON.stringify(userWelcomeMessage))   
-  
-  // Broadcast entering user to clients
-  // console.log(`Broadcasting user ${userId} entrance`)
-  const roomUserEntryMessage = {
-    type: "SERVER_BROADCAST_ENTRY",
-    payload: {
-      sender: "room-general",
-      time: new Date(),
-      body: `<em>${userHandle}</em> entered the chat.`,
-      userHandle
+    console.debug(`usersList`, userWelcomeMessage.users)
+    
+    ws.send(JSON.stringify(userWelcomeMessage))   
+    
+    // Broadcast entering user to clients
+    // console.log(`Broadcasting user ${userId} entrance`)
+    const roomUserEntryMessage = {
+      type: "SERVER_BROADCAST_ENTRY",
+      payload: {
+        sender: "room-general",
+        time: new Date(),
+        body: `<em>${userHandle}</em> entered the chat.`,
+        userHandle
+      }
     }
+    broadcastMessage(roomUserEntryMessage, ws)
+    // TODO broadcast msg to update usersList
   }
-  broadcastMessage(roomUserEntryMessage, ws)
-  // TODO broadcast msg to update usersList
 
   ws.on('message', function (rawMessage) {
     const message = JSON.parse(rawMessage)
@@ -180,20 +198,22 @@ wss.on('connection', function (ws, req, client) {
   })
 
   ws.on('close', function () {
-    const roomUserLeft = {
-      type: "SERVER_BROADCAST_LEAVE",
-      payload: {
-        sender: "room-general",
-        time: new Date(),
-        body: `<em>${userHandle}</em> left the chat.`
-      }
-    }
-    broadcastMessage(roomUserLeft)
 
     // TODO send msg to update usersList
     delete sessionUsers[req.session.id]
     console.log(`user ${req.session.id} Client disconnected, current connections(tmp hide dev): `)
     // console.log(`${Object.keys(sessionUsers)}`)
+    
+    const roomUserLeft = {
+      type: "SERVER_BROADCAST_LEAVE",
+      payload: {
+        sender: "room-general",
+        time: new Date(),
+        body: `<em>${userHandle}</em> left the chat.`,
+        usersList: Object.values(sessionUsers).map(o => o.userHandle)
+      }
+    }
+    broadcastMessage(roomUserLeft)
 
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
     // ws.termiante equiv to node socket.destroy()

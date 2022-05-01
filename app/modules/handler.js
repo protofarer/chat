@@ -4,8 +4,9 @@ import {
   ENV,
   ui
 } from '../app.js'
-import { addChat, addChatFromClient, addChatFromServer } from './chat.js'
+import { addChat, addChatFromClient, addChatFromServer } from './ChatBox.js'
 import Message from './Message.js'
+import UsersList from './UsersList.js'
 
 export default async function handler(action) {
   console.log('action.type:', action.type)
@@ -71,6 +72,9 @@ export default async function handler(action) {
 
     case 'SERVER_WELCOME':
       state.userHandle = action.payload.userHandle
+      action.payload.usersList.forEach(user => {
+        UsersList.addUsersList(user)
+      })
       addChatFromServer(action)
       break
 
@@ -81,12 +85,12 @@ export default async function handler(action) {
     case 'SERVER_BROADCAST_ENTRY':
       // TODO add to usersList
       addChatFromServer(action)
-      addUsersList(action.payload.userHandle)
+      UsersList.addUsersList(action.payload.userHandle)
       break
 
     case 'SERVER_BROADCAST_LEAVE':
       addChatFromServer(action)
-      removeUsersList(action.payload.userHandle)
+      UsersList.removeUsersList(action.payload.userHandle)
       break
 
 
@@ -206,13 +210,4 @@ async function logout() {
   } catch (err) {
     throw new Error(`Unhandled logout error: ${err.message}`)
   }
-}
-
-function addUsersList(userHandle) {
-  
-
-}
-
-function removeUsersList(userHandle) {
-
 }
