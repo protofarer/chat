@@ -141,7 +141,7 @@ wss.on('connection', function (ws, req, client) {
       .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0]
     sessionUsers[req.session.id] = { ws, userHandle }
   
-    console.log(`user ${req.session.id} connected, current connections (tmp hide dev): `)
+    console.log(`user ${req.session.id} connected, current connections (tmp hidden): `)
     // console.log(Object.keys(sessionUsers))
     
     // Send welcome message to user entering room
@@ -202,7 +202,7 @@ wss.on('connection', function (ws, req, client) {
     delete sessionUsers[req.session.id]
     roomUserLeft.payload.usersList = Object.values(sessionUsers).map(o => o.userHandle)
     broadcastMessage(roomUserLeft)
-    console.log(`user ${req.session.id} Client disconnected, current connections(tmp hide dev): `)
+    console.log(`user ${req.session.id} Client disconnected, current connections(tmp hidden): `)
     // console.log(`${Object.keys(sessionUsers)}`)
     
 
