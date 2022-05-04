@@ -112,6 +112,8 @@ let handleNamePool = [
   'ghostofvanhalen'
 ]
 
+let chatCounter = 0;
+
 server.on('upgrade', (req, socket, head) => {
   console.log('Parsing session from req')
 
@@ -155,7 +157,8 @@ wss.on('connection', function (ws, req, client) {
         time: new Date(),
         body: `====== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ======`,
         userHandle,
-        usersList
+        usersList,
+        chatCounter: chatCounter++,
       }
     }
     ws.send(JSON.stringify(userWelcomeMessage))   
@@ -168,18 +171,20 @@ wss.on('connection', function (ws, req, client) {
         time: new Date(),
         body: `<em>${userHandle}</em> entered the chat.`,
         userHandle,
-        usersList
+        usersList,
+        chatCounter: chatCounter++,
       }
     }
     broadcastMessage(roomUserEntryMessage, ws)
 
     ws.on('message', function (rawMessage) {
-      const message = JSON.parse(rawMessage)
+      let message = JSON.parse(rawMessage)
       switch (message.type) {
         case 'userSendChat':
-            message.payload.sender = userHandle
-            message.type = 'SERVER_BROADCAST_CHAT'
-            broadcastMessage(message)
+          message.payload.sender = userHandle
+          message.type = 'SERVER_BROADCAST_CHAT'
+          message.chatCounter = chatCounter++
+          broadcastMessage(message)
           break
         default:
           console.log('Error: Unhandled message type:', message.type)
@@ -196,6 +201,7 @@ wss.on('connection', function (ws, req, client) {
         sender: "room-general",
         time: new Date(),
         body: `<em>${sessionUsers[req.session.id].userHandle}</em> left the chat.`,
+        chatCounter: chatCounter++,
       }
     }
     delete sessionUsers[req.session.id]
