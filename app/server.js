@@ -161,7 +161,6 @@ wss.on('connection', function (ws, req, client) {
     ws.send(JSON.stringify(userWelcomeMessage))   
     
     // Broadcast entering user to clients
-    // console.log(`Broadcasting user ${userId} entrance`)
     const roomUserEntryMessage = {
       type: "SERVER_BROADCAST_ENTRY",
       payload: {
@@ -173,21 +172,21 @@ wss.on('connection', function (ws, req, client) {
       }
     }
     broadcastMessage(roomUserEntryMessage, ws)
-    // TODO broadcast msg to update usersList
+
+    ws.on('message', function (rawMessage) {
+      const message = JSON.parse(rawMessage)
+      switch (message.type) {
+        case 'userSendChat':
+            message.payload.sender = userHandle
+            message.type = 'SERVER_BROADCAST_CHAT'
+            broadcastMessage(message)
+          break
+        default:
+          console.log('Error: Unhandled message type:', message.type)
+      }
+    })
   }
 
-  ws.on('message', function (rawMessage) {
-    const message = JSON.parse(rawMessage)
-    switch (message.type) {
-      case 'userSendChat':
-        message.payload.sender = userHandle
-        message.type = 'SERVER_BROADCAST_CHAT'
-        broadcastMessage(message)
-        break
-      default:
-        console.log('Error: Unhandled message type:', message.type)
-    }
-  })
 
   ws.on('close', function () {
 
