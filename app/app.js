@@ -20,6 +20,7 @@ export let state = {
   ws: null,
 
   usersList: [],
+  chatCounter: 0,
 }
 
 export function resetState() {
@@ -28,7 +29,8 @@ export function resetState() {
     isChatConnected: false,
     room: '',
     handle: '',
-    textInput: ''
+    textInput: '',
+    chatCounter: 0,
   }
 }
 

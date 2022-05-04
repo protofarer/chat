@@ -43,7 +43,8 @@ app.post('/login', (req, res) => {
     payload: {
       sender: 'knet',
       body: `You logged in.`,
-      time: new Date()
+      time: new Date(),
+      chatCounter: chatCounter++,
     }
   }
   // res.set("Access-Control-Allow-Origin", "https://192.168.1.200:3000")
@@ -70,6 +71,7 @@ app.post('/logout', (req, res) => {
         sender: 'knet',
         body: `You are logged out.`,
         time: new Date(),
+        chatCounter: chatCounter++,
       }
     }
     res.send(JSON.stringify(message))
@@ -112,6 +114,8 @@ let handleNamePool = [
   'ghostofvanhalen'
 ]
 
+// VIGIL if chat every gets popular, this will need to be handled better:
+//    loop it 'round, use a get function.
 let chatCounter = 0;
 
 server.on('upgrade', (req, socket, head) => {
@@ -183,7 +187,7 @@ wss.on('connection', function (ws, req, client) {
         case 'userSendChat':
           message.payload.sender = userHandle
           message.type = 'SERVER_BROADCAST_CHAT'
-          message.chatCounter = chatCounter++
+          message.payload.chatCounter = chatCounter++
           broadcastMessage(message)
           break
         default:
