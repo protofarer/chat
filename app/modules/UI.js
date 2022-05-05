@@ -39,12 +39,7 @@ export default class UI {
     const handleTextInput = (e) => {
       e.key === 'Enter' && handleSend(e)
     }
-
-    this.loginButton.addEventListener('click', handleLogin.bind(this))
-    this.connectButton.addEventListener('click', handleConnect.bind(this))
-    this.sendButton.addEventListener('click', handleSend.bind(this))
-    this.userTextInput.addEventListener('keydown', handleTextInput.bind(this))
-
+    
     async function handleLogin() {
       if (!state.isLoggedIn) {
         this.handler({type: 'ASK_LOGIN'})
@@ -54,11 +49,17 @@ export default class UI {
           : this.handler({type: 'ASK_LOGOUT'})
       }
     }
+    
     async function handleConnect() {
       state.ws
         ? this.handler({ type: 'ASK_WS_CLOSE' })
         : this.handler({ type: 'ASK_WS_OPEN' })
     }
+
+    this.loginButton.addEventListener('click', handleLogin.bind(this))
+    this.connectButton.addEventListener('click', handleConnect.bind(this))
+    this.sendButton.addEventListener('click', handleSend.bind(this))
+    this.userTextInput.addEventListener('keydown', handleTextInput.bind(this))
   }
 
   // Update UI after state change
