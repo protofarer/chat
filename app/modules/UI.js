@@ -9,30 +9,41 @@ export default class UI {
     this.usersList = document.querySelector('#chatUsersList')
     this.userTextInput = document.querySelector('#userTextInput')
     this.sendButton = document.querySelector('#send')
-    this.setupListeners()
 
     this.handler = handler
+    
+    this.setupListeners()
   }
 
   setupListeners() {
+    const handleSend = (e) => {
+      if (!state.ws) {
+        this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
+      } else {
+        if (e.target.id === 'send') {
+          if (this.userTextInput.value.trim().length > 0) {
+            this.handler({ type: 'SEND_CHAT' })
+            this.userTextInput.value = ''
+          }
+        } else if (e.target.id === 'userTextInput') {
+          if (e.target.value.trim().length > 0) {
+            this.handler({ type: 'SEND_CHAT' })
+            e.target.value = ''
+          }
+        } else {
+          console.error('Unhandled send event')
+        }
+      }
+    }
+
+    const handleTextInput = (e) => {
+      e.key === 'Enter' && handleSend(e)
+    }
+
     this.loginButton.addEventListener('click', handleLogin.bind(this))
     this.connectButton.addEventListener('click', handleConnect.bind(this))
     this.sendButton.addEventListener('click', handleSend.bind(this))
     this.userTextInput.addEventListener('keydown', handleTextInput.bind(this))
-
-    function handleTextInput(e) {
-      e.key === 'Enter' && handleSend(e)
-    }
-    
-    function handleSend() {
-      if (!state.ws) {
-        this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
-      } else if (this.userTextInput.value.trim().length > 0) {
-        this.handler({ type: 'SEND_CHAT' })
-        this.userTextInput.value = ''
-      }
-      // Do nothing if input empty
-    }
 
     async function handleLogin() {
       if (!state.isLoggedIn) {

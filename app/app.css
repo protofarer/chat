@@ -166,6 +166,12 @@ button:hover, button:focus {
   flex-grow: 4;
 }
 
+.chatLine {
+  margin: 0;
+  padding: 0;
+  /* white-space: pre; */
+}
+
 #chatUsersList {
   margin: 0;
   padding: 5px;

@@ -4,7 +4,7 @@ export function addChat({body, id, payload=null}) {
   // TODO concatenates to existing state.chat
   // chatBox.innerHTML updated to state.chat every time this
   // fn invoked.
-  const newLine = `<li id="${id}" style="color:${payload?.sender === 'knet' ? 'green' : 'red'}">${body}</li>`
+  const newLine = `<li id="${id}" class="chatLine" style="color:${payload?.sender === 'knet' ? 'green' : 'red'}">${body}</li>`
   state.chatText += newLine
   ui.chatBox.innerHTML += newLine
   ui.chatBox.scrollTop = chatBox.scrollHeight   // sets scrollTop to max value

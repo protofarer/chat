@@ -103,7 +103,7 @@ let handleNamePool = [
   'mewtwo',
   'miketyson',
   'ghostofstevejobs',
-  'kira',
+  'MrEd',
   'eddie',
   'guile',
   'kaztheminotaur',
