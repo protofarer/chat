@@ -1,35 +1,54 @@
 import { ui, state } from '../app.js'
 
-export function addChat({ id, time, sender, body, }) {
-  const chatLine = DocumentFragment.createElement('li')
+export function addChat({ id, time, sender, body }) {
+  const fragment = new DocumentFragment()
 
+  const chatLine = document.createElement('li')
   // id unique and calculated differently between server and client senders
   chatLine.id = id;
 
   // Set css class according to sender
-  if (payload.sender === 'knet') {
+  if (sender === 'knet') {
     chatLine.className = "chatLineServer"
-  } else if (payload.sender === 'cli' || payload.sender === 'room-general') {
+  } else if (sender === 'cli' || sender === 'room-general') {
     chatLine.className = "chatLineClient"
   } else {
     chatLine.className = "chatLine"
   }
 
-  const prefix = DocumentFragment.createElement('span')
+  const chatLinePrefix = document.createElement('span')
   let prefixText = ''
   prefixText += `(${time}) `;
-  prefixText += ` <strong>[${sender}]</strong>:`
-  prefix.innerText = prefixText;
-  chatLine.appendChild(prefix)
+  prefixText += ` <strong>[${sender}]</strong>: `
+  chatLinePrefix.innerHTML = prefixText;
+  chatLine.appendChild(chatLinePrefix)
 
-  // TODO sanitize
+  const chatLineText = document.createElement('span')
+  chatLineText.className = 'chatLineText'
+  let text = body;
+
+  // chatLineText.setHTML(text)    // setHTML is experimental as of 5/5/22
+  // Sanitizer.sanitizeFor()    // Sanitizer API is experimental as of 5/5/22
+
+  // TODO parse
   // TODO replace html entities
+  // TODO sanitize(in vein of Sanitizer API): 
+  // strip out XSS-relevant input
+  // strip out script tags
+  // strip out custom elements
+  // strip out comments
+  
+  chatLineText.textContent = text;
 
-  ui.chatBox.innerHTML += newLine
+  chatLine.appendChild(chatLineText)
+  fragment.appendChild(chatLine)
+  ui.chatBox.appendChild(fragment)
+
+  // ui.chatBox.innerHTML += newLine
   ui.chatBox.scrollTop = chatBox.scrollHeight   // sets scrollTop to max value
 }
 
-export function addChatFromClient(lineTextBody) {
+export function addChatFromClient(lineText) {
   const id = `${Date.now()}-cli-${state.chatCounter}`
 
   const time = new Date().toLocaleTimeString(
@@ -43,7 +62,7 @@ export function addChatFromClient(lineTextBody) {
     id,
     time,
     sender,
-    body: lineTextBody,
+    body: lineText,
   })
   // Client appends chatCounter to id, server handles its own
   state.chatCounter++;

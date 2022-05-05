@@ -185,8 +185,8 @@ button:hover, button:focus {
 }
 
 /* Body text within chat line, aka the chat message to be communicated */
-.chatLineBody {
-  display: inline;
+.chatLineText {
+  white-space: pre;
 }
 
 #chatUsersList {
