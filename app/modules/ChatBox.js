@@ -2,23 +2,26 @@ import { ui, state } from '../app.js'
 
 export function addChat({ id, time, sender, body, }) {
   const chatBox = document.querySelector('#chatBox')
-  const line = DocumentFragment.createElement('li')
+  const chatLine = DocumentFragment.createElement('li')
 
   // id unique and calculated differently between server and client senders
-  line.id = id;
+  chatLine.id = id;
 
   // Set css class according to sender
   if (payload.sender === 'knet') {
-    line.className = "chatLineServer"
+    chatLine.className = "chatLineServer"
   } else if (payload.sender === 'cli' || payload.sender === 'room-general') {
-    line.className = "chatLineClient"
+    chatLine.className = "chatLineClient"
   } else {
-    line.className = "chatLine"
+    chatLine.className = "chatLine"
   }
 
-  let lineText = ''
-  lineText += `(${time}) `;
-  lineText += ` <strong>[${sender}]</strong>:`
+  let prefixText = ''
+  prefixText += `(${time}) `;
+  prefixText += ` <strong>[${sender}]</strong>:`
+  const prefix = DocumentFragment.createElement('span')
+  prefix.innerText = prefixText;
+  chatLine.appendChild(prefix)
 
   // TODO sanitize
   // TODO replace html entities
