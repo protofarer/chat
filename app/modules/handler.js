@@ -133,9 +133,7 @@ export default async function handler(action) {
       break
     case 'WS_CLOSE':
       // reachable when server restarts or sends its close signal first
-      addChatFromClient(`\
-        ====== The server closed your connect. Adios! ======\
-      `)
+      addChatFromClient(`====== The server closed your connect. Adios! ======`)
       state.isChatConnected = false
       state.room = ''
       

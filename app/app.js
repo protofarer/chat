@@ -15,7 +15,7 @@ export let state = {
   userHandle: '',
   
   textInput: '',
-  chatText: '',
+  // chatText: '',
   
   ws: null,
 

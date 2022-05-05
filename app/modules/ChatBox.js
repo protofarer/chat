@@ -30,13 +30,13 @@ export function addChat({ id, time, sender, body }) {
   // chatLineText.setHTML(text)    // setHTML is experimental as of 5/5/22
   // Sanitizer.sanitizeFor()    // Sanitizer API is experimental as of 5/5/22
 
-  // TODO parse
-  // TODO replace html entities
-  // TODO sanitize(in vein of Sanitizer API): 
-  // strip out XSS-relevant input
-  // strip out script tags
-  // strip out custom elements
-  // strip out comments
+  // VIGIL parse
+    // replace html entities
+    // sanitize(in vein of Sanitizer API): 
+    // strip out XSS-relevant input
+    // strip out script tags
+    // strip out custom elements
+    // strip out comments
   
   chatLineText.textContent = text;
 
