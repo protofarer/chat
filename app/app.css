@@ -166,14 +166,27 @@ button:hover, button:focus {
   flex-grow: 4;
 }
 
+/* A typical chat line in its entirety including formatted timestamp, sender, and body text */
 .chatLine {
   margin: 0;
   padding: 0;
+  color: 'red';
   /* white-space: pre; */
 }
 
-.chatLineBody {
+/* Chat line from server */
+.chatLineServer {
+  color: 'green';
+}
 
+/* Chat line from client */
+.chatLineClient {
+  color: 'purple';
+}
+
+/* Body text within chat line, aka the chat message to be communicated */
+.chatLineBody {
+  display: inline;
 }
 
 #chatUsersList {
