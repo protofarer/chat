@@ -1,4 +1,4 @@
-import { state } from '../app.js'
+import { state } from '../index.js'
 import UsersList from './UsersList.js'
 
 export default class UI {

@@ -3,7 +3,7 @@ import {
   state,
   ENV,
   ui
-} from '../app.js'
+} from '../index.js'
 import { addChat, addChatFromClient, addChatFromServer } from './ChatBox.js'
 import Message from './Message.js'
 import UsersList from './UsersList.js'

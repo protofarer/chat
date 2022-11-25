@@ -1,4 +1,4 @@
-import { ui, state } from '../app.js'
+import { ui, state } from '../index.js'
 
 export function addChat({ id, time, sender, body }) {
   const fragment = new DocumentFragment()

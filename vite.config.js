@@ -5,10 +5,13 @@ import fs from 'fs';
 
 // }
 export default defineConfig({
-  root: "app",
+  // root: "app",
+  root: ".",
   mode: "development",
-  envDir: "../",
-  publicDir: '../public',
+  // envDir: "../",
+  envDir: ".",
+  // publicDir: '../public',
+  publicDir: './app',
   server: {
     port: 3001
   }

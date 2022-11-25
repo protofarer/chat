@@ -1,4 +1,4 @@
-import { state } from "../app.js"
+import { state } from "../index.js"
 
 const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'cyan']
 
