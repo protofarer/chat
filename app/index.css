@@ -167,7 +167,7 @@ button:hover, button:focus {
 }
 
 /* A typical chat line in its entirety including formatted timestamp, sender, and body text */
-.chatLine {
+.chatLineGeneral {
   margin: 0;
   padding: 0;
   color: 'red';

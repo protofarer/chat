@@ -14,7 +14,7 @@ export default async function handler(action) {
   switch (action.type) {
 
     // ***
-    // * Source: Client
+    // * From Client
     // ***
 
     case 'ASK_LOGIN':
@@ -57,7 +57,7 @@ export default async function handler(action) {
     
 
     // ***
-    // * Source: Server
+    // * From Server
     // ***
 
     case 'SERVER_LOGIN':
@@ -104,11 +104,13 @@ export default async function handler(action) {
     case 'ASK_WS_OPEN':
       // CSDR await?
       // ws = new WebSocket(`wss://${location.host}`)
-      state.ws = new WebSocket(`${ENV.WSS_HOST}:${ENV.PORT}`)
+      state.ws = new WebSocket(`wss://${ENV.SERVER_HOST}:${ENV.SERVER_PORT}`)
       state.ws.addEventListener('open', handleWSEvents.bind(this))
       state.ws.addEventListener('message', handleWSEvents.bind(this))
       state.ws.addEventListener('error', handleWSEvents.bind(this))
       state.ws.addEventListener('close', handleWSEvents.bind(this))
+      console.log(`ws setup done`, )
+      
       break
     
     case 'ASK_WS_CLOSE':
@@ -182,6 +184,7 @@ function handleWSEvents(event) {
 }
 
 async function login() {
+  console.log(`IN login`, )
   console.log(`POST ${ENV.URL}/login`)
   console.log(`ENV`, ENV)
   
@@ -194,12 +197,15 @@ async function login() {
     return response.ok 
       ? await response.json()
       : new Error('Unexpected login response')
+
   } catch (err) {
+
     if (err.name === 'TypeError') {
       console.error(`${err.message}`)
     } else {
       throw new Error(`Unhandled logout error: ${err}`)
     } 
+
   }
 }
 
@@ -209,10 +215,12 @@ async function logout() {
       `${ENV.URL}/logout`,
       { method: 'POST', credentials: 'same-origin' }
     )
+
     return response.ok
       ? await response.json()
       : new Error('Unexpected logout response')
+
   } catch (err) {
-    throw new Error(`Unhandled logout error: ${err.message}`)
+    new Error(`Unhandled logout error: ${err.message}`)
   }
 }

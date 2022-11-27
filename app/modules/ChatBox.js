@@ -4,16 +4,16 @@ export function addChat({ id, time, sender, body }) {
   const fragment = new DocumentFragment()
 
   const chatLine = document.createElement('li')
-  // id unique and calculated differently between server and client senders
+
+  // * id unique and calculated differently between server and client senders
   chatLine.id = id;
 
-  // Set css class according to sender
   if (sender === 'knet') {
     chatLine.className = "chatLineServer"
   } else if (sender === 'cli' || sender === 'room-general') {
     chatLine.className = "chatLineClient"
   } else {
-    chatLine.className = "chatLine"
+    chatLine.className = "chatLineGeneral"
   }
 
   const chatLinePrefix = document.createElement('span')
@@ -26,9 +26,6 @@ export function addChat({ id, time, sender, body }) {
   const chatLineText = document.createElement('span')
   chatLineText.className = 'chatLineText'
   let text = body;
-
-  // chatLineText.setHTML(text)    // setHTML is experimental as of 5/5/22
-  // Sanitizer.sanitizeFor()    // Sanitizer API is experimental as of 5/5/22
 
   // VIGIL parse
     // replace html entities

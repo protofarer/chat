@@ -1,4 +1,3 @@
-'use strict'
 const fs = require('fs')
 const path = require('path')
 const https = require('https')
@@ -9,10 +8,6 @@ const WebSocket = require('ws')
 const { WebSocketServer } = require('ws')
 require('dotenv').config()
 
-// ***************************************************
-//                    EXPRESS
-// ***************************************************
-
 const app = express()
 
 const sessionParser = session({
@@ -22,8 +17,6 @@ const sessionParser = session({
 })
 
 app.use(cors())
-// app.use(express.static(path.resolve(__dirname, './public')))
-// app.use("/", express.static(path.resolve(__dirname, './public/assets')))
 app.use(sessionParser)
 
 // app.all('/', function(req, res, next) {
@@ -32,13 +25,14 @@ app.use(sessionParser)
 //   next()
 //  })
 
+// * Partial implementation until Kade hookup
 app.post('/login', (req, res) => {
-  // ********* DEV *********
+  console.log(`IN /login`, )
+  
   // const id = uuid.v4()
   // req.session.userId = id
-  // ***********************
 
-  // PROD_TODO session reload to re-populate req.session
+  // TODO (prod) session reload to re-populate req.session
   const message = {
     type: 'SERVER_LOGIN',
     payload: {
@@ -53,6 +47,7 @@ app.post('/login', (req, res) => {
   res.send(JSON.stringify(message))
 })
 
+// * Partial implementation until Kade hookup
 app.post('/logout', (req, res) => {
   const ws = sessionUsers[req.session.id]?.ws
   console.log(`(IN /logout Destroying session for user ${req.session.id}`)
@@ -100,26 +95,27 @@ const sessionUsers = {}    // Dictionary, userId as key
 let handleNamePool = [
   'pikachu',
   'bulbasaur',
-  'charmander',
-  'mewtwo',
-  'miketyson',
-  'ghostofstevejobs',
-  'MrEd',
-  'eddie',
-  'guile',
-  'kaztheminotaur',
-  'raistlyn',
-  'woolymammoth',
-  'barney',
-  'ghostofschopenhauer',
-  'ghostofvanhalen'
+  // 'miketyson',
+  // 'stevejobs',
+  // 'eddie',
+  // 'guile',
+  // 'ryu',
+  // 'kaztheminotaur',
+  // 'raistlyn',
+  // 'woolymammoth',
+  // 'barney',
+  // 'schopenhauer',
+  // 'vanhalen',
+  // 'lylading',
+  // 'scarface'
 ]
 
-// VIGIL if chat every gets popular, this will need to be handled better:
-//    loop it 'round, use a get function.
 let chatCounter = 0;
 
+// ?
 server.on('upgrade', (req, socket, head) => {
+  console.log(`IN server.on upgrade`, )
+  
   console.log('Parsing session from req')
 
   sessionParser(req, {}, () => {
@@ -144,24 +140,21 @@ wss.on('connection', function (ws, req, client) {
     console.debug(`handleNamePool empty, broadcast room full`, )
     throw new Error(`ran out of assignable usernames aka room full, debugme`)
   } else {
-    const userHandle = handleNamePool
-      .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0]
-    sessionUsers[req.session.id] = { ws, userHandle }
+    const handle = getNameFromPool()
+    sessionUsers[req.session.id] = { ws, handle }
   
-    console.log(`user ${req.session.id} connected, current connections (tmp hidden): `)
-    // console.log(Object.keys(sessionUsers))
+    console.log(`user connected(sess-id:${req.session.id}), connection count: (tmp hidden): `)
     
     // Send welcome message to user entering room
-    
-    const usersList = Object.values(sessionUsers).map(o => o.userHandle)
+    const usersList = Object.values(sessionUsers).map(user => user.handle)
 
     const userWelcomeMessage = {
       type: "SERVER_WELCOME",
       payload: {
         sender: "room-general",
         time: new Date(),
-        body: `====== Hi <em>${userHandle}</em>, welcome to kenny.net general chat ======`,
-        userHandle,
+        body: `====== Hi <em>${handle}</em>, welcome to kenny.net general chat ======`,
+        handle,
         usersList,
         chatCounter: chatCounter++,
       }
@@ -174,8 +167,8 @@ wss.on('connection', function (ws, req, client) {
       payload: {
         sender: "room-general",
         time: new Date(),
-        body: `<em>${userHandle}</em> entered the chat.`,
-        userHandle,
+        body: `<em>${handle}</em> entered the chat.`,
+        handle,
         usersList,
         chatCounter: chatCounter++,
       }
@@ -184,9 +177,10 @@ wss.on('connection', function (ws, req, client) {
 
     ws.on('message', function (rawMessage) {
       let message = JSON.parse(rawMessage)
+      // TODO handled by Message class, arg msg type
       switch (message.type) {
         case 'userSendChat':
-          message.payload.sender = userHandle
+          message.payload.sender = handle
           message.type = 'SERVER_BROADCAST_CHAT'
           message.payload.chatCounter = chatCounter++
           broadcastMessage(message)
@@ -199,30 +193,28 @@ wss.on('connection', function (ws, req, client) {
 
 
   ws.on('close', function () {
-
     const roomUserLeft = {
       type: "SERVER_BROADCAST_LEAVE",
       payload: {
         sender: "room-general",
         time: new Date(),
-        body: `<em>${sessionUsers[req.session.id].userHandle}</em> left the chat.`,
+        body: `<em>${sessionUsers[req.session.id].handle}</em> left the chat.`,
         chatCounter: chatCounter++,
       }
     }
     delete sessionUsers[req.session.id]
-    roomUserLeft.payload.usersList = Object.values(sessionUsers).map(o => o.userHandle)
+    roomUserLeft.payload.usersList = Object.values(sessionUsers).map(o => o.handle)
     broadcastMessage(roomUserLeft)
     console.log(`user ${req.session.id} Client disconnected, current connections(tmp hidden): `)
     // console.log(`${Object.keys(sessionUsers)}`)
-    
 
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
-    // ws.termiante equiv to node socket.destroy()
+    // ws.terminate equiv to node socket.destroy()
     // ws.terminate()
   })
 
   function broadcastMessage(message, ws=null) {
-    console.log(`Broadcasting message "${message.payload.body}" from sender ${message.payload.sender}`)  // TODO make this work
+    console.log(`Broadcasting message "${message.payload.body}" from sender ${message.payload.sender}`)
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN && client !== ws) {
         client.send(JSON.stringify(message))
@@ -240,17 +232,18 @@ wss.on('error', (event) => {
   console.log('WSS errored: ', event)
 })
 
-const HOSTA = 'localhost'
-const HOSTB = '0.0.0.0'
-const HOSTC = '192.168.1.200'
+const HOST = process.env.HOST
 const PORT = process.env.PORT
-const HOST = process.env.EXPRESS_HTTPS_HOST
-
 server.listen(PORT, HOST, () => {
   console.log(`listening on https://${HOST}:${PORT}`)
 })
 
-// WARN make this work
 wss.on('listen', () => {
+  console.log(`IN wss.on listen`, )
   // console.log(`listening on wss://${HOST}:${PORT}`)
 })
+
+function getNameFromPool() {
+  return handleNamePool
+    .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0]
+}

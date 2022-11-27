@@ -2,10 +2,13 @@ import UI from './modules/UI.js'
 import handler from './modules/handler.js'
 
 export const ENV = new (function() {
-  this.PORT =  import.meta.env ? import.meta.env.VITE_PORT : 3000
-  this.HTTPS_HOST = import.meta.env ? import.meta.env.VITE_HTTPS_HOST : `https://0.0.0.0`
-  this.WSS_HOST = import.meta.env ? import.meta.env.VITE_WSS_HOST : `wss://0.0.0.0`
-  this.URL = `${this.HTTPS_HOST}:${this.PORT}`
+  this.SERVER_PORT =  import.meta.env 
+    ? import.meta.env.VITE_SERVER_PORT 
+    : 3000
+  this.SERVER_HOST = import.meta.env 
+    ? `${import.meta.env.VITE_SERVER_HOST}`
+    : `0.0.0.0`
+  this.URL = `https://${this.SERVER_HOST}:${this.SERVER_PORT}`
 })()
 
 export let state = {
