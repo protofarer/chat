@@ -7,7 +7,6 @@ export default class Client {
   isChatConnected = false
   room
   handle
-  textInput = ''
   ws
   usersList = []
   chatCounter = 0
@@ -123,7 +122,6 @@ export default class Client {
     this.isChatConnected = false
     this.room = null
     this.handle = ''
-    this.textInput = ''
     this.chatCounter = 0
   }
 
@@ -187,8 +185,6 @@ export default class Client {
     this.loginButt.innerText = this.isLoggedIn 
       ? '🟢 | LOGOUT'
       : '🔴 | LOGIN'
-
-    this.userTextInput.value = this.textInput  
 
     this.connectButt.innerText = this.isChatConnected
       ? '🟢 | DISCONNECT'
