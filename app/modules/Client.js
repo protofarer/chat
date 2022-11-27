@@ -1,3 +1,4 @@
+import handler from './handler.js'
 export default class Client {
   isLoggedIn = false
   isChatConnected = false
@@ -8,17 +9,21 @@ export default class Client {
   usersList = []
   chatCounter = 0
 
-  constructor(handler) {
-    this.loginButton = document.querySelector('#login')
-    this.connectButton = document.querySelector('#connect')
-    this.chatBox = document.querySelector('#chatBox')
-    this.usersListComponent = document.querySelector('#chatUsersList')
-    this.userTextInput = document.querySelector('#userTextInput')
-    this.sendButton = document.querySelector('#send')
+  loginButton = document.querySelector('#login')
+  connectButton = document.querySelector('#connect')
+  chatBox = document.querySelector('#chatBox')
+  usersListComponent = document.querySelector('#chatUsersList')
+  userTextInput = document.querySelector('#userTextInput')
+  sendButton = document.querySelector('#send')
 
-    this.handler = handler
-    
-    this.setupListeners()
+  constructor() {
+    this.connect()
+    this.activateListeners()
+  }
+
+  async connect() {
+    await handler({ type: 'ASK_LOGIN' })
+    await handler({ type: 'ASK_WS_OPEN' })
   }
 
   reset() {
@@ -30,19 +35,19 @@ export default class Client {
     this.chatCounter = 0
   }
 
-  setupListeners() {
+  activateListeners() {
     const handleSend = (e) => {
       if (!this.ws) {
-        this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
+        handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
       } else {
         if (e.target.id === 'send') {
           if (this.userTextInput.value.trim().length > 0) {
-            this.handler({ type: 'SEND_CHAT' })
+            handler({ type: 'SEND_CHAT' })
             this.userTextInput.value = ''
           }
         } else if (e.target.id === 'userTextInput') {
           if (e.target.value.trim().length > 0) {
-            this.handler({ type: 'SEND_CHAT' })
+            handler({ type: 'SEND_CHAT' })
             e.target.value = ''
           }
         } else {
@@ -57,18 +62,18 @@ export default class Client {
     
     async function handleLogin() {
       if (!this.isLoggedIn) {
-        this.handler({type: 'ASK_LOGIN'})
+        handler({type: 'ASK_LOGIN'})
       } else {
         this.isChatConnected
-          ? this.handler({ type: 'DENY_LOGOUT' })
-          : this.handler({type: 'ASK_LOGOUT'})
+          ? handler({ type: 'DENY_LOGOUT' })
+          : handler({type: 'ASK_LOGOUT'})
       }
     }
     
     async function handleConnect() {
       this.ws
-        ? this.handler({ type: 'ASK_WS_CLOSE' })
-        : this.handler({ type: 'ASK_WS_OPEN' })
+        ? handler({ type: 'ASK_WS_CLOSE' })
+        : handler({ type: 'ASK_WS_OPEN' })
     }
 
     this.loginButton.addEventListener('click', handleLogin.bind(this))

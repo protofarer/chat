@@ -34,7 +34,7 @@ app.post('/login', (req, res) => {
 
   // TODO (prod) session reload to re-populate req.session
   const message = {
-    type: 'SERVER_LOGIN',
+    type: 'SERVER_LOGGEDIN',
     payload: {
       sender: 'knet',
       body: `You logged in.`,
@@ -94,12 +94,12 @@ const sessionUsers = {}    // Dictionary, userId as key
 // XPLOR json-server
 let handleNamePool = [
   'pikachu',
-  'bulbasaur',
-  // 'miketyson',
+  // 'bulbasaur',
+  'miketyson',
   // 'stevejobs',
   // 'eddie',
   // 'guile',
-  // 'ryu',
+  'ryu',
   // 'kaztheminotaur',
   // 'raistlyn',
   // 'woolymammoth',
@@ -117,7 +117,6 @@ server.on('upgrade', (req, socket, head) => {
   console.log(`IN server.on upgrade`, )
   
   console.log('Parsing session from req')
-
   sessionParser(req, {}, () => {
     if (!req.session.id) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')

@@ -6,14 +6,10 @@ import { addChat, addChatFromClient, addChatFromServer } from './ChatBox.js'
 import Message from './Message.js'
 
 export default async function handler(action) {
-  console.log('action.type:', action.type)
+  console.log(`ACTION: ${action.type}`)
 
   switch (action.type) {
-
-    // ***
-    // * From Client
-    // ***
-
+    // * Client Requests Server
     case 'ASK_LOGIN':
       const loginMessage = await login()
       handler(loginMessage)
@@ -26,17 +22,8 @@ export default async function handler(action) {
       handler(logoutData)
       break
 
-    case 'DENY_LOGOUT':
-      addChatFromClient('\
-        You must disconnect from chat before logging out. \
-        <auto-disconnect will be enable in future release>\
-      ')
-      break;
 
-    case 'SEND_FAIL_WHILE_DISCONNECTED':
-      addChatFromClient(`Cannot send message, you are disconnected`)
-      break
-
+    // * Healthy actions
     case 'SEND_CHAT':
       const chatMessage = {
         type: 'userSendChat',
@@ -48,16 +35,27 @@ export default async function handler(action) {
       Message.send(client.ws, chatMessage)
       break
     
+    // * Client fails logged in check
+    case 'DENY_LOGOUT':
+      addChatFromClient('\
+        You must disconnect from chat before logging out. \
+        <auto-disconnect will be enable in future release>\
+      ')
+      break;
+
+    // * Client tried sending message while disconnected
+    case 'FAIL_SEND_WHILE_DISCONNECTED':
+      addChatFromClient(`Cannot send message, you are disconnected`)
+      break
+
     case 'DENY_WS_CLOSE_WHILE_LOGGEDOUT':
       addChatFromClient(`You must login to site before connected to chat.`)
       break
     
 
-    // ***
     // * From Server
-    // ***
 
-    case 'SERVER_LOGIN':
+    case 'SERVER_LOGGEDIN':
       client.isLoggedIn = true
       addChatFromServer(action)
       break
