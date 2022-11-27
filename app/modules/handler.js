@@ -1,30 +1,25 @@
-import { 
-  ENV,
-  client
-} from '../index.js'
+import { ENV, client } from '../index.js'
 import { addChat, addChatFromClient, addChatFromServer } from './ChatBox.js'
 import Message from './Message.js'
+import Constants from './Constants.js'
 
 export default async function handler(action) {
   console.log(`ACTION: ${action.type}`)
 
   switch (action.type) {
-    // * Client Requests Server
-    case 'ASK_LOGIN':
-      const loginMessage = await login()
+    case Constants.client.ASK_LOGIN:
+      const loginMessage = await client.login()
       handler(loginMessage)
       break
 
-    case 'ASK_LOGOUT':
-      const logoutData = await logout()
+    case Constants.client.ASK_LOGOUT:
+      const logoutData = await client.logout()
       client.isLoggedIn = false
       client.isChatConnected = false
       handler(logoutData)
       break
 
-
-    // * Healthy actions
-    case 'SEND_CHAT':
+    case Constants.client.SEND_CHAT:
       const chatMessage = {
         type: 'userSendChat',
         payload: {
@@ -35,37 +30,39 @@ export default async function handler(action) {
       Message.send(client.ws, chatMessage)
       break
     
-    // * Client fails logged in check
-    case 'DENY_LOGOUT':
+    case Constants.client.FAIL_LOGOUT_WHILE_CONNECTED:
       addChatFromClient('\
-        You must disconnect from chat before logging out. \
+        You must disconnect from chat before logging out from site. \
         <auto-disconnect will be enable in future release>\
       ')
       break;
 
     // * Client tried sending message while disconnected
-    case 'FAIL_SEND_WHILE_DISCONNECTED':
+    case Constants.client.FAIL_SEND_WHILE_DISCONNECTED:
       addChatFromClient(`Cannot send message, you are disconnected`)
       break
 
-    case 'DENY_WS_CLOSE_WHILE_LOGGEDOUT':
-      addChatFromClient(`You must login to site before connected to chat.`)
+    case Constants.ws.FAIL_LOGOUT_WHILE_WS_CONNECTED:
+      addChatFromClient(`There is no ws connection to close while logged out`)
       break
-    
+
+    case Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT:
+      addChatFromClient(`You must login before connecting to chat`)
+      break
 
     // * From Server
 
-    case 'SERVER_LOGGEDIN':
+    case Constants.server.LOGGEDIN:
       client.isLoggedIn = true
       addChatFromServer(action)
       break
 
-    case 'SERVER_LOGOUT':
+    case Constants.server.LOGGEDOUT:
       client.isLoggedIn = false
       addChatFromServer(action)
       break
 
-    case 'SERVER_WELCOME':
+    case Constants.server.WELCOME:
       client.handle = action.payload.handle
       client.usersList = action.payload.usersList
       // action.payload.usersList.forEach(user => {
@@ -74,18 +71,18 @@ export default async function handler(action) {
       addChatFromServer(action)
       break
 
-    case 'SERVER_BROADCAST_CHAT':
+    case Constants.server.BROADCAST_CHAT:
       addChatFromServer(action)
       break
 
-    case 'SERVER_BROADCAST_ENTRY':
+    case Constants.server.BROADCAST_ENTRY:
       // TODO add to usersList
       addChatFromServer(action)
       client.usersList = action.payload.usersList
       // UsersList.addUsersList(action.payload.userHandle)
       break
 
-    case 'SERVER_BROADCAST_LEAVE':
+    case Constants.server.BROADCAST_LEAVE:
       addChatFromServer(action)
       console.log(`server userslist on leave`, action.payload.usersList)
       client.usersList = action.payload.usersList
@@ -96,7 +93,7 @@ export default async function handler(action) {
     // * WebSocket Client Submissions
     // ***
 
-    case 'ASK_WS_OPEN':
+    case Constants.client.ASK_WS_OPEN:
       // CSDR await?
       // ws = new WebSocket(`wss://${location.host}`)
       client.ws = new WebSocket(`wss://${ENV.SERVER_HOST}:${ENV.SERVER_PORT}`)
@@ -108,7 +105,7 @@ export default async function handler(action) {
       
       break
     
-    case 'ASK_WS_CLOSE':
+    case Constants.client.ASK_WS_CLOSE:
       addChatFromClient(`====== You left the chat. Bye! ======`)
       client.isChatConnected = false
       client.room = ''
@@ -124,11 +121,11 @@ export default async function handler(action) {
     // * WebSocket Server Receipts
     // ***
 
-    case 'WS_OPEN':
+    case Constants.ws.OPEN:
       client.isChatConnected = true
       client.room = 'general'
       break
-    case 'WS_CLOSE':
+    case Constants.ws.CLOSE:
       // reachable when server restarts or sends its close signal first
       addChatFromClient(`====== The server closed your connect. Adios! ======`)
       client.isChatConnected = false
@@ -150,22 +147,22 @@ export default async function handler(action) {
 
 function handleWSEvents(event) {
   // Handle incoming server websocket events
-  console.log('ws event.type', event.type)
+  console.log('WS EVENT:', event.type)
   switch (event.type) {
     case 'error':
-      console.log('WS Error code:', event.code)     
+      console.log('error code:', event.code)     
       break
     case 'open':
-      // Can only open if already logged in
-      handler({ type: 'WS_OPEN' })
+      // Can only open when logged in
+      handler({ type: Constants.ws.OPEN })
       break
     case 'close':
       // WS sends a close event even when a new ws object fails to connect
       // Thus this case block must:
       if (!client.isLoggedIn) {              // handle close events when not logged in
-        handler({ type: 'DENY_WS_CLOSE_WHILE_LOGGEDOUT'})
+        handler({ type: Constants.ws.FAIL_WS_CLOSE_WHILE_LOGGEDOUT})
       } else if (client.isChatConnected) {   // handle close events when logged in
-        handler({ type: 'WS_CLOSE' })
+        handler({ type: Constants.ws.CLOSE })
       }
       break
     case 'message':
@@ -175,47 +172,5 @@ function handleWSEvents(event) {
       break
     default:
       console.log('Unhandled event.type:', event.type)
-  }
-}
-
-async function login() {
-  console.log(`IN login`, )
-  console.log(`POST ${ENV.URL}/login`)
-  console.log(`ENV`, ENV)
-  
-  try {
-    const response = await fetch(
-      `${ENV.URL}/login`, 
-      { method: 'POST', credentials: 'same-origin' }
-    )
-    
-    return response.ok 
-      ? await response.json()
-      : new Error('Unexpected login response')
-
-  } catch (err) {
-
-    if (err.name === 'TypeError') {
-      console.error(`${err.message}`)
-    } else {
-      throw new Error(`Unhandled logout error: ${err}`)
-    } 
-
-  }
-}
-
-async function logout() {
-  try {
-    const response = await fetch(
-      `${ENV.URL}/logout`,
-      { method: 'POST', credentials: 'same-origin' }
-    )
-
-    return response.ok
-      ? await response.json()
-      : new Error('Unexpected logout response')
-
-  } catch (err) {
-    new Error(`Unhandled logout error: ${err.message}`)
   }
 }

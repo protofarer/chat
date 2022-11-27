@@ -34,7 +34,7 @@ app.post('/login', (req, res) => {
 
   // TODO (prod) session reload to re-populate req.session
   const message = {
-    type: 'SERVER_LOGGEDIN',
+    type: 'LOGGEDIN',
     payload: {
       sender: 'knet',
       body: `You logged in.`,
@@ -62,7 +62,7 @@ app.post('/logout', (req, res) => {
     }
 
     const message = {
-      type: 'SERVER_LOGOUT',
+      type: 'LOGGEDOUT',
       payload: {
         sender: 'knet',
         body: `You are logged out.`,
@@ -148,7 +148,7 @@ wss.on('connection', function (ws, req, client) {
     const usersList = Object.values(sessionUsers).map(user => user.handle)
 
     const userWelcomeMessage = {
-      type: "SERVER_WELCOME",
+      type: "WELCOME",
       payload: {
         sender: "room-general",
         time: new Date(),
@@ -162,7 +162,7 @@ wss.on('connection', function (ws, req, client) {
     
     // Broadcast entering user to clients
     const roomUserEntryMessage = {
-      type: "SERVER_BROADCAST_ENTRY",
+      type: "BROADCAST_ENTRY",
       payload: {
         sender: "room-general",
         time: new Date(),
@@ -180,7 +180,7 @@ wss.on('connection', function (ws, req, client) {
       switch (message.type) {
         case 'userSendChat':
           message.payload.sender = handle
-          message.type = 'SERVER_BROADCAST_CHAT'
+          message.type = 'BROADCAST_CHAT'
           message.payload.chatCounter = chatCounter++
           broadcastMessage(message)
           break
@@ -193,7 +193,7 @@ wss.on('connection', function (ws, req, client) {
 
   ws.on('close', function () {
     const roomUserLeft = {
-      type: "SERVER_BROADCAST_LEAVE",
+      type: "BROADCAST_LEAVE",
       payload: {
         sender: "room-general",
         time: new Date(),

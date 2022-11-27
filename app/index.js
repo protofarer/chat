@@ -11,6 +11,7 @@ export const ENV = new (function() {
 })()
 
 export const client = new Client()
+client.connect()
 
 // TODO Use session if exists upon document load
 // get handle from session

@@ -1,4 +1,6 @@
 import handler from './handler.js'
+import { ENV } from '../index.js'
+import Constants from './Constants.js'
 export default class Client {
   isLoggedIn = false
   isChatConnected = false
@@ -17,13 +19,54 @@ export default class Client {
   sendButton = document.querySelector('#send')
 
   constructor() {
-    this.connect()
     this.activateListeners()
   }
 
   async connect() {
     await handler({ type: 'ASK_LOGIN' })
     await handler({ type: 'ASK_WS_OPEN' })
+  }
+
+  async login() {
+    console.log(`IN login`, )
+    console.log(`POST ${ENV.URL}/login`)
+    console.log(`ENV`, ENV)
+    
+    try {
+      const response = await fetch(
+        `${ENV.URL}/login`, 
+        { method: 'POST', credentials: 'same-origin' }
+      )
+      
+      return response.ok 
+        ? await response.json()
+        : new Error('Unexpected login response')
+
+    } catch (err) {
+
+      if (err.name === 'TypeError') {
+        console.error(`${err.message}`)
+      } else {
+        throw new Error(`Unhandled logout error: ${err}`)
+      } 
+
+    }
+  }
+
+  async logout() {
+    try {
+      const response = await fetch(
+        `${ENV.URL}/logout`,
+        { method: 'POST', credentials: 'same-origin' }
+      )
+
+      return response.ok
+        ? await response.json()
+        : new Error('Unexpected logout response')
+
+    } catch (err) {
+      new Error(`Unhandled logout error: ${err.message}`)
+    }
   }
 
   reset() {
@@ -62,18 +105,26 @@ export default class Client {
     
     async function handleLogin() {
       if (!this.isLoggedIn) {
-        handler({type: 'ASK_LOGIN'})
+        handler({type: Constants.client.ASK_LOGIN})
       } else {
-        this.isChatConnected
-          ? handler({ type: 'DENY_LOGOUT' })
-          : handler({type: 'ASK_LOGOUT'})
+        if (this.isChatConnected) {
+          handler({ type: Constants.client.FAIL_LOGOUT_WHILE_CONNECTED })
+        } else {
+          handler({type: 'ASK_LOGOUT'})
+        }
       }
     }
     
     async function handleConnect() {
-      this.ws
-        ? handler({ type: 'ASK_WS_CLOSE' })
-        : handler({ type: 'ASK_WS_OPEN' })
+      if (this.isLoggedIn) {
+        if (this.isChatConnected) {
+          handler({ type: Constants.client.ASK_WS_CLOSE })
+        } else {
+          handler({ type: Constants.client.ASK_WS_OPEN })
+        }
+      } else {
+        handler({ type: Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT})
+      }
     }
 
     this.loginButton.addEventListener('click', handleLogin.bind(this))
