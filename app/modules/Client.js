@@ -242,7 +242,7 @@ export default class Client {
             time: new Date(),
           }
         }
-        Message.send(this.ws, chatMessage)
+        this.ws.send(JSON.stringify(chatMessage))
         break
       
       case Constants.client.FAIL_LOGOUT_WHILE_CONNECTED:
@@ -269,12 +269,12 @@ export default class Client {
 
       case Constants.server.LOGGEDIN:
         this.isLoggedIn = true
-        this.chatbox.addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(action)
         break
 
       case Constants.server.LOGGEDOUT:
         this.isLoggedIn = false
-        this.chatbox.addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(action)
         break
 
       case Constants.server.WELCOME:
@@ -283,22 +283,22 @@ export default class Client {
         // action.payload.usersList.forEach(user => {
         //   UsersList.addUsersList(user)
         // })
-        this.chatbox.addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(action)
         break
 
       case Constants.server.BROADCAST_CHAT:
-        this.chatbox.addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(action)
         break
 
       case Constants.server.BROADCAST_ENTRY:
         // TODO add to usersList
-        this.chatbox.addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(action)
         this.usersList = action.payload.usersList
         // UsersList.addUsersList(action.payload.userHandle)
         break
 
       case Constants.server.BROADCAST_LEAVE:
-        this.chatbox.addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(action)
         console.log(`server userslist on leave`, action.payload.usersList)
         this.usersList = action.payload.usersList
         break
@@ -335,7 +335,7 @@ export default class Client {
               break
             case 'message':
               console.log('raw message event from server', event)
-              const message = Message.parseEventData(event)
+              const message = JSON.parse(event.data)
               this.handler(message)
               break
             default:

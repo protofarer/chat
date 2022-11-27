@@ -5,7 +5,7 @@ export default class ChatBox {
     container.appendChild(this.element)
   }
 
-  addChat(client, { id, time, sender, body }) {
+  addChat({ id, time, sender, body }) {
     const fragment = new DocumentFragment()
     
     const chatLine = document.createElement('li')
@@ -60,7 +60,7 @@ export default class ChatBox {
   
     const sender = 'cli'
     
-    this.addChat(client, {
+    this.addChat({
       id,
       time,
       sender,
@@ -70,7 +70,7 @@ export default class ChatBox {
     client.chatCounter++;
   }
   
-  addChatFromServer(client, action) {
+  addChatFromServer(action) {
     let id = `${new Date(action.payload.time).getTime()}-`
     id += `${action.payload.sender}-`
     id += `${action.payload.chatCounter}`
@@ -82,7 +82,7 @@ export default class ChatBox {
   
     const sender = action.payload.sender
   
-    this.addChat(client, {
+    this.addChat({
       id,
       time,
       sender,
