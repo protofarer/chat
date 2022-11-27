@@ -38,7 +38,7 @@ export function addChat({ id, time, sender, body }) {
     // strip out custom elements
     // strip out comments
   
-  chatLineText.textContent = text;
+  chatLineText.innerHTML = text;
 
   chatLine.appendChild(chatLineText)
   fragment.appendChild(chatLine)

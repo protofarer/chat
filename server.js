@@ -22,7 +22,8 @@ const sessionParser = session({
 })
 
 app.use(cors())
-app.use(express.static(path.resolve(__dirname, './app')))
+// app.use(express.static(path.resolve(__dirname, './public')))
+// app.use("/", express.static(path.resolve(__dirname, './public/assets')))
 app.use(sessionParser)
 
 // app.all('/', function(req, res, next) {

@@ -5,16 +5,26 @@ import fs from 'fs';
 
 // }
 export default defineConfig({
-  // root: "app",
-  root: ".",
+  root: "app",
+  // root: ".",
   mode: "development",
-  // envDir: "../",
-  envDir: ".",
+  envDir: "../",
+  // envDir: ".",
   // publicDir: '../public',
-  publicDir: './app',
+  // publicDir: './app',
   server: {
     port: 3001
-  }
+  },
+  // build: {
+  //   rollupOptions: {
+  //     input: 'app/index.js',
+  //     output: {
+  //       dir: 'public',
+  //       entryFileNames: 'assets/[name].js',
+  //       sourcemap: true,
+  //     },
+  //   },
+  // },
 })
 
 // })

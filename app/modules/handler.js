@@ -183,6 +183,8 @@ function handleWSEvents(event) {
 
 async function login() {
   console.log(`POST ${ENV.URL}/login`)
+  console.log(`ENV`, ENV)
+  
   try {
     const response = await fetch(
       `${ENV.URL}/login`, 
