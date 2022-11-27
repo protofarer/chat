@@ -1,12 +1,18 @@
-import { state } from '../index.js'
-import UsersList from './UsersList.js'
+export default class Client {
+  isLoggedIn = false
+  isChatConnected = false
+  room
+  handle
+  textInput = ''
+  ws
+  usersList = []
+  chatCounter = 0
 
-export default class UI {
   constructor(handler) {
     this.loginButton = document.querySelector('#login')
     this.connectButton = document.querySelector('#connect')
     this.chatBox = document.querySelector('#chatBox')
-    this.usersList = document.querySelector('#chatUsersList')
+    this.usersListComponent = document.querySelector('#chatUsersList')
     this.userTextInput = document.querySelector('#userTextInput')
     this.sendButton = document.querySelector('#send')
 
@@ -15,9 +21,18 @@ export default class UI {
     this.setupListeners()
   }
 
+  reset() {
+    this.isLoggedIn = false
+    this.isChatConnected = false
+    this.room = null
+    this.handle = ''
+    this.textInput = ''
+    this.chatCounter = 0
+  }
+
   setupListeners() {
     const handleSend = (e) => {
-      if (!state.ws) {
+      if (!this.ws) {
         this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
       } else {
         if (e.target.id === 'send') {
@@ -41,17 +56,17 @@ export default class UI {
     }
     
     async function handleLogin() {
-      if (!state.isLoggedIn) {
+      if (!this.isLoggedIn) {
         this.handler({type: 'ASK_LOGIN'})
       } else {
-        state.isChatConnected
+        this.isChatConnected
           ? this.handler({ type: 'DENY_LOGOUT' })
           : this.handler({type: 'ASK_LOGOUT'})
       }
     }
     
     async function handleConnect() {
-      state.ws
+      this.ws
         ? this.handler({ type: 'ASK_WS_CLOSE' })
         : this.handler({ type: 'ASK_WS_OPEN' })
     }
@@ -64,16 +79,35 @@ export default class UI {
 
   // Update UI after state change
   update() {
-    this.loginButton.innerText = state.isLoggedIn 
+    this.loginButton.innerText = this.isLoggedIn 
       ? '🟢 | LOGOUT'
       : '🔴 | LOGIN'
 
-    this.userTextInput.value = state.textInput  
+    this.userTextInput.value = this.textInput  
 
-    this.connectButton.innerText = state.isChatConnected
+    this.connectButton.innerText = this.isChatConnected
       ? '🟢 | DISCONNECT'
       : '🔴 | CONNECT'
 
-    this.usersList.innerHTML = UsersList.buildHTML()
+    this.usersListComponent.innerHTML = this.renderUsersList()
+  }
+
+  renderUsersList() {
+    const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'cyan']
+    const html = this.usersList.reduce((html, handle, i) => (
+        html 
+        + `<li `
+        + `id=${i} `
+        + `style="color: ${colors[Math.floor(Math.random() * colors.length)]}">`
+        + `${
+          handle === this.handle 
+            ? '<strong>(you) ' + handle + '</strong>' 
+            : handle
+        }`
+        + `</li>`
+      )
+    , "")
+
+    return html
   }
 }

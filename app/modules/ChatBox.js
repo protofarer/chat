@@ -1,4 +1,4 @@
-import { ui, state } from '../index.js'
+import { client } from '../index.js'
 
 export function addChat({ id, time, sender, body }) {
   const fragment = new DocumentFragment()
@@ -39,14 +39,14 @@ export function addChat({ id, time, sender, body }) {
 
   chatLine.appendChild(chatLineText)
   fragment.appendChild(chatLine)
-  ui.chatBox.appendChild(fragment)
+  client.chatBox.appendChild(fragment)
 
-  // ui.chatBox.innerHTML += newLine
-  ui.chatBox.scrollTop = chatBox.scrollHeight   // sets scrollTop to max value
+  // client.chatBox.innerHTML += newLine
+  client.chatBox.scrollTop = chatBox.scrollHeight   // sets scrollTop to max value
 }
 
 export function addChatFromClient(lineText) {
-  const id = `${Date.now()}-cli-${state.chatCounter}`
+  const id = `${Date.now()}-cli-${client.chatCounter}`
 
   const time = new Date().toLocaleTimeString(
         'en-US', 
@@ -62,7 +62,7 @@ export function addChatFromClient(lineText) {
     body: lineText,
   })
   // Client appends chatCounter to id, server handles its own
-  state.chatCounter++;
+  client.chatCounter++;
 }
 
 export function addChatFromServer(action) {

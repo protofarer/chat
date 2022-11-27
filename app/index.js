@@ -1,4 +1,4 @@
-import UI from './modules/UI.js'
+import Client from './modules/Client.js'
 import handler from './modules/handler.js'
 
 export const ENV = new (function() {
@@ -11,33 +11,7 @@ export const ENV = new (function() {
   this.URL = `https://${this.SERVER_HOST}:${this.SERVER_PORT}`
 })()
 
-export let state = {
-  isLoggedIn: false,
-  isChatConnected: false,
-  room: '',
-  userHandle: '',
-  
-  textInput: '',
-  // chatText: '',
-  
-  ws: null,
-
-  usersList: [],
-  chatCounter: 0,
-}
-
-export function resetState() {
-  state = {
-    isLoggedIn: false,
-    isChatConnected: false,
-    room: '',
-    handle: '',
-    textInput: '',
-    chatCounter: 0,
-  }
-}
-
-export let ui = new UI(handler)
+export const client = new Client(handler)
 
 // TODO Use session if exists upon document load
 // get handle from session
