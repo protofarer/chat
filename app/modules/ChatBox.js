@@ -1,6 +1,4 @@
-import { client } from '../index.js'
-
-export function addChat({ id, time, sender, body }) {
+export function addChat(client, { id, time, sender, body }) {
   const fragment = new DocumentFragment()
 
   const chatLine = document.createElement('li')
@@ -45,7 +43,7 @@ export function addChat({ id, time, sender, body }) {
   client.chatBox.scrollTop = chatBox.scrollHeight   // sets scrollTop to max value
 }
 
-export function addChatFromClient(lineText) {
+export function addChatFromClient(client, lineText) {
   const id = `${Date.now()}-cli-${client.chatCounter}`
 
   const time = new Date().toLocaleTimeString(
@@ -55,7 +53,7 @@ export function addChatFromClient(lineText) {
 
   const sender = 'cli'
   
-  addChat({
+  addChat(client, {
     id,
     time,
     sender,
@@ -65,7 +63,7 @@ export function addChatFromClient(lineText) {
   client.chatCounter++;
 }
 
-export function addChatFromServer(action) {
+export function addChatFromServer(client, action) {
   let id = `${new Date(action.payload.time).getTime()}-`
   id += `${action.payload.sender}-`
   id += `${action.payload.chatCounter}`
@@ -77,7 +75,7 @@ export function addChatFromServer(action) {
 
   const sender = action.payload.sender
 
-  addChat({
+  addChat(client, {
     id,
     time,
     sender,
