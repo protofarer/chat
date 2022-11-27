@@ -1,8 +1,7 @@
-// import handler from './handler.js'
 import { ENV } from '../index.js'
 import Constants from './Constants.js'
-import Message from './Message.js'
 import ChatBox from './ChatBox.js'
+
 export default class Client {
   isLoggedIn = false
   isChatConnected = false
@@ -14,15 +13,14 @@ export default class Client {
   chatCounter = 0
 
   constructor(rootElement) {
-    this.rootElement = rootElement
-    this.makeElements()
+    this.makeElements(rootElement)
     this.activateListeners()
   }
 
-  makeElements() {
+  makeElements(rootElement) {
     this.topContainer = document.createElement('div')
     this.topContainer.id = 'topContainer'
-    this.rootElement.appendChild(this.topContainer)
+    rootElement.appendChild(this.topContainer)
 
     this.menuContainer = document.createElement('div')
     this.menuContainer.id = 'menuContainer'
