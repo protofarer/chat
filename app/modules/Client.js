@@ -2,7 +2,7 @@
 import { ENV } from '../index.js'
 import Constants from './Constants.js'
 import Message from './Message.js'
-import { addChatFromClient, addChatFromServer } from './ChatBox.js'
+import ChatBox from './ChatBox.js'
 export default class Client {
   isLoggedIn = false
   isChatConnected = false
@@ -13,15 +13,67 @@ export default class Client {
   usersList = []
   chatCounter = 0
 
-  loginButton = document.querySelector('#login')
-  connectButton = document.querySelector('#connect')
-  chatBox = document.querySelector('#chatBox')
-  usersListComponent = document.querySelector('#chatUsersList')
-  userTextInput = document.querySelector('#userTextInput')
-  sendButton = document.querySelector('#send')
-
-  constructor() {
+  constructor(rootElement) {
+    this.rootElement = rootElement
+    this.makeElements()
     this.activateListeners()
+  }
+
+  makeElements() {
+    this.topContainer = document.createElement('div')
+    this.topContainer.id = 'topContainer'
+    this.rootElement.appendChild(this.topContainer)
+
+    this.menuContainer = document.createElement('div')
+    this.menuContainer.id = 'menuContainer'
+    this.topContainer.appendChild(this.menuContainer)
+
+    this.menu = document.createElement('menu')
+    this.menu.id = 'menu'
+    this.menuContainer.appendChild(this.menu)
+
+    this.loginButt = document.createElement('button')
+    this.loginButt.id = 'login'
+    this.loginButt.innerText = 'LOGIN'
+    this.menu.appendChild(this.loginButt)
+
+    this.connectButt = document.createElement('button')
+    this.connectButt.id = 'connect'
+    this.connectButt.innerText = 'CONNECT'
+    this.menu.appendChild(this.connectButt)
+
+    this.usersListSpacer = document.createElement('div')
+    this.usersListSpacer.id = 'usersListSpacer'
+    this.menuContainer.appendChild(this.usersListSpacer)
+
+    this.chatContainer = document.createElement('div')
+    this.chatContainer.id = 'chatContainer'
+    this.topContainer.appendChild(this.chatContainer)
+
+    this.chatbox = new ChatBox(this.chatContainer)
+
+    this.chatUsersList = document.createElement('ul')
+    this.chatUsersList.id = 'chatUsersList'
+    this.chatContainer.appendChild(this.chatUsersList)
+
+    this.chatBoxSpacer = document.createElement('div')
+    this.chatBoxSpacer.id = 'chatBoxSpacer'
+    this.topContainer.appendChild(this.chatBoxSpacer)
+
+    this.inputPanel = document.createElement('div')
+    this.inputPanel.id = 'inputPanel'
+    this.topContainer.appendChild(this.inputPanel)
+
+    this.userTextInput = document.createElement('input')
+    this.userTextInput.id = 'userTextInput'
+    this.userTextInput.type = 'text'
+    this.inputPanel.appendChild(this.userTextInput)
+
+    this.sendButt = document.createElement('button')
+    this.sendButt.id = 'send'
+    this.sendButt.type = 'submit'
+    this.sendButt.innerText = 'SEND'
+    this.inputPanel.appendChild(this.sendButt)
   }
 
   async connect() {
@@ -31,9 +83,6 @@ export default class Client {
 
   async login() {
     console.log(`IN login`, )
-    console.log(`POST ${ENV.URL}/login`)
-    console.log(`ENV`, ENV)
-    
     try {
       const response = await fetch(
         `${ENV.URL}/login`, 
@@ -115,8 +164,6 @@ export default class Client {
           this.handler({type: 'ASK_LOGOUT'})
         }
       }
-      console.log(`ahoy there!`, )
-      
     }
     
     async function handleConnect() {
@@ -131,25 +178,25 @@ export default class Client {
       }
     }
 
-    this.loginButton.addEventListener('click', handleLogin.bind(this))
-    this.connectButton.addEventListener('click', handleConnect.bind(this))
-    this.sendButton.addEventListener('click', handleSend.bind(this))
+    this.loginButt.addEventListener('click', handleLogin.bind(this))
+    this.connectButt.addEventListener('click', handleConnect.bind(this))
+    this.sendButt.addEventListener('click', handleSend.bind(this))
     this.userTextInput.addEventListener('keydown', handleTextInput.bind(this))
   }
 
   // Update UI after state change
-  update() {
-    this.loginButton.innerText = this.isLoggedIn 
+  render() {
+    this.loginButt.innerText = this.isLoggedIn 
       ? '🟢 | LOGOUT'
       : '🔴 | LOGIN'
 
     this.userTextInput.value = this.textInput  
 
-    this.connectButton.innerText = this.isChatConnected
+    this.connectButt.innerText = this.isChatConnected
       ? '🟢 | DISCONNECT'
       : '🔴 | CONNECT'
 
-    this.usersListComponent.innerHTML = this.renderUsersList()
+    this.chatUsersList.innerHTML = this.renderUsersList()
   }
 
   renderUsersList() {
@@ -199,7 +246,7 @@ export default class Client {
         break
       
       case Constants.client.FAIL_LOGOUT_WHILE_CONNECTED:
-        addChatFromClient(this, '\
+        this.chatbox.addChatFromClient(this, '\
           You must disconnect from chat before logging out from site. \
           <auto-disconnect will be enable in future release>\
         ')
@@ -207,27 +254,27 @@ export default class Client {
 
       // * Client tried sending message while disconnected
       case Constants.client.FAIL_SEND_WHILE_DISCONNECTED:
-        addChatFromClient(this, `Cannot send message, you are disconnected`)
+        this.chatbox.addChatFromClient(this, `Cannot send message, you are disconnected`)
         break
 
       case Constants.ws.FAIL_LOGOUT_WHILE_WS_CONNECTED:
-        addChatFromClient(this, `There is no ws connection to close while logged out`)
+        this.chatbox.addChatFromClient(this, `There is no ws connection to close while logged out`)
         break
 
       case Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT:
-        addChatFromClient(this, `You must login before connecting to chat`)
+        this.chatbox.addChatFromClient(this, `You must login before connecting to chat`)
         break
 
       // * From Server
 
       case Constants.server.LOGGEDIN:
         this.isLoggedIn = true
-        addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(this, action)
         break
 
       case Constants.server.LOGGEDOUT:
         this.isLoggedIn = false
-        addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(this, action)
         break
 
       case Constants.server.WELCOME:
@@ -236,22 +283,22 @@ export default class Client {
         // action.payload.usersList.forEach(user => {
         //   UsersList.addUsersList(user)
         // })
-        addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(this, action)
         break
 
       case Constants.server.BROADCAST_CHAT:
-        addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(this, action)
         break
 
       case Constants.server.BROADCAST_ENTRY:
         // TODO add to usersList
-        addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(this, action)
         this.usersList = action.payload.usersList
         // UsersList.addUsersList(action.payload.userHandle)
         break
 
       case Constants.server.BROADCAST_LEAVE:
-        addChatFromServer(this, action)
+        this.chatbox.addChatFromServer(this, action)
         console.log(`server userslist on leave`, action.payload.usersList)
         this.usersList = action.payload.usersList
         break
@@ -298,7 +345,7 @@ export default class Client {
         break
       
       case Constants.client.ASK_WS_CLOSE:
-        addChatFromClient(this, `====== You left the chat. Bye! ======`)
+        this.chatbox.addChatFromClient(this, `====== You left the chat. Bye! ======`)
         this.isChatConnected = false
         this.room = ''
         this.usersList = []
@@ -319,7 +366,7 @@ export default class Client {
         break
       case Constants.ws.CLOSE:
         // reachable when server restarts or sends its close signal first
-        addChatFromClient(this, `====== The server closed your connect. Adios! ======`)
+        this.chatbox.addChatFromClient(this, `====== The server closed your connect. Adios! ======`)
         this.isChatConnected = false
         this.room = ''
         
@@ -334,6 +381,6 @@ export default class Client {
       default:
         console.log('unhandled action:', action)
     }
-    this.update()
+    this.render()
   }
 }

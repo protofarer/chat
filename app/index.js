@@ -10,7 +10,8 @@ export const ENV = new (function() {
   this.URL = `https://${this.SERVER_HOST}:${this.SERVER_PORT}`
 })()
 
-const client = new Client()
+const root = document.querySelector('#root')
+const client = new Client(root)
 client.connect()
 
 // TODO Use session if exists upon document load
