@@ -123,10 +123,38 @@ export default class Client {
     this.room = null
     this.handle = ''
     this.chatCounter = 0
+    this.ws = null
+    this.usersList = []
+    this.chatCounter = 0
   }
 
   activateListeners() {
-    const handleSend = (e) => {
+    this.loginButt.addEventListener('click', async () => {
+      if (!this.isLoggedIn) {
+        this.handler({ type: Constants.client.ASK_LOGIN})
+      } else {
+        if (this.isChatConnected) {
+          this.handler({ type: Constants.client.FAIL_LOGOUT_WHILE_CONNECTED })
+        } else {
+          this.handler({type: 'ASK_LOGOUT'})
+        }
+      }
+    })
+    
+
+    this.connectButt.addEventListener('click', async () => {
+      if (this.isLoggedIn) {
+        if (this.isChatConnected) {
+          this.handler({ type: Constants.client.ASK_WS_CLOSE })
+        } else {
+          this.handler({ type: Constants.client.ASK_WS_OPEN })
+        }
+      } else {
+        this.handler({ type: Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT})
+      }
+    })
+
+    this.sendButt.addEventListener('click', (e) => {
       if (!this.ws) {
         this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
       } else {
@@ -144,40 +172,11 @@ export default class Client {
           console.error('Unhandled send event')
         }
       }
-    }
+    })
 
-    const handleTextInput = (e) => {
+    this.userTextInput.addEventListener('keydown', (e) => {
       e.key === 'Enter' && handleSend(e)
-    }
-    
-    async function handleLogin() {
-      if (!this.isLoggedIn) {
-        this.handler({ type: Constants.client.ASK_LOGIN})
-      } else {
-        if (this.isChatConnected) {
-          this.handler({ type: Constants.client.FAIL_LOGOUT_WHILE_CONNECTED })
-        } else {
-          this.handler({type: 'ASK_LOGOUT'})
-        }
-      }
-    }
-    
-    async function handleConnect() {
-      if (this.isLoggedIn) {
-        if (this.isChatConnected) {
-          this.handler({ type: Constants.client.ASK_WS_CLOSE })
-        } else {
-          this.handler({ type: Constants.client.ASK_WS_OPEN })
-        }
-      } else {
-        this.handler({ type: Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT})
-      }
-    }
-
-    this.loginButt.addEventListener('click', handleLogin.bind(this))
-    this.connectButt.addEventListener('click', handleConnect.bind(this))
-    this.sendButt.addEventListener('click', handleSend.bind(this))
-    this.userTextInput.addEventListener('keydown', handleTextInput.bind(this))
+    })
   }
 
   // Update UI after state change
