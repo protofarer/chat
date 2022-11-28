@@ -1,12 +1,21 @@
-const fs = require('fs')
-const path = require('path')
-const https = require('https')
-const express=  require('express')
-const cors = require('cors')
-const session = require('express-session')
-const WebSocket = require('ws')
-const { WebSocketServer } = require('ws')
-require('dotenv').config()
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import https from 'https'
+import express from 'express'
+import cors from 'cors'
+import session from 'express-session'
+import WebSocket from 'ws'
+import { WebSocketServer } from 'ws'
+
+// TODO dev only, direct import; prod build step copies app/modules/Constants.js to server prod dir
+import Constants from './app/modules/Constants.js'
+
+import dotenv from 'dotenv'
+dotenv.config()
+// require('dotenv').config()
+
+
 
 const app = express()
 
@@ -34,7 +43,7 @@ app.post('/login', (req, res) => {
 
   // TODO (prod) session reload to re-populate req.session
   const message = {
-    type: 'LOGGEDIN',
+    type: Constants.server.LOGGEDIN,
     payload: {
       sender: 'knet',
       body: `You logged in.`,
@@ -62,7 +71,7 @@ app.post('/logout', (req, res) => {
     }
 
     const message = {
-      type: 'LOGGEDOUT',
+      type: Constants.server.LOGGEDOUT,
       payload: {
         sender: 'knet',
         body: `You are logged out.`,
@@ -74,11 +83,8 @@ app.post('/logout', (req, res) => {
   })
 })
 
-
-// ***************************************************
-// ** /EXPRESS
-// ***************************************************
-
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 const server = https.createServer(
   {
     key: fs.readFileSync(path.resolve(__dirname, './.ssl/key.pem')),
@@ -148,7 +154,7 @@ wss.on('connection', function (ws, req, client) {
     const usersList = Object.values(sessionUsers).map(user => user.handle)
 
     const userWelcomeMessage = {
-      type: "WELCOME",
+      type: Constants.server.UNICAST_WELCOME,
       payload: {
         sender: "room-general",
         time: new Date(),
@@ -159,10 +165,10 @@ wss.on('connection', function (ws, req, client) {
       }
     }
     ws.send(JSON.stringify(userWelcomeMessage))   
-    
+
     // Broadcast entering user to clients
     const roomUserEntryMessage = {
-      type: "BROADCAST_ENTRY",
+      type: Constants.server.BROADCAST_ENTRY,
       payload: {
         sender: "room-general",
         time: new Date(),
@@ -178,9 +184,9 @@ wss.on('connection', function (ws, req, client) {
       let message = JSON.parse(rawMessage)
       // TODO handled by Message class, arg msg type
       switch (message.type) {
-        case 'userSendChat':
+        case Constants.client.SEND_CHAT:
           message.payload.sender = handle
-          message.type = 'BROADCAST_CHAT'
+          message.type = Constants.server.BROADCAST_CHAT
           message.payload.chatCounter = chatCounter++
           broadcastMessage(message)
           break
@@ -193,7 +199,7 @@ wss.on('connection', function (ws, req, client) {
 
   ws.on('close', function () {
     const roomUserLeft = {
-      type: "BROADCAST_LEAVE",
+      type: Constants.server.BROADCAST_LEAVE,
       payload: {
         sender: "room-general",
         time: new Date(),

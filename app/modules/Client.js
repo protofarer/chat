@@ -1,5 +1,6 @@
 import { ENV } from '../index.js'
 import ChatBox from './ChatBox.js'
+import Constants from './Constants.js'
 
 export default class Client {
   isLoggedIn = false
@@ -9,32 +10,6 @@ export default class Client {
   ws
   usersList = []
   chatCounter = 0
-
-  static action = {
-    client: {
-      ASK_LOGIN: 'ASK_LOGIN',
-      ASK_LOGOUT: 'ASK_LOGOUT',
-      FAIL_LOGOUT_WHILE_CONNECTED: 'FAIL_LOGOUT_WHILE_CONNECTED',
-      FAIL_CONNECT_WHILE_LOGGEDOUT: 'FAIL_CONNECT_WHILE_LOGGEDOUT',
-      FAIL_SEND_WHILE_DISCONNECTED: 'SEND_FAIL_WHILE_DISCONNECTED',
-      SEND_CHAT: 'SEND_CHAT',
-      ASK_WS_OPEN: 'ASK_WS_OPEN',
-      ASK_WS_CLOSE: 'ASK_WS_CLOSE',
-    },
-    server: {
-      LOGGEDIN: 'LOGGEDIN',
-      LOGGEDOUT: 'LOGGEDOUT',
-      WELCOME: 'WELCOME',
-      BROADCAST_CHAT: 'BROADCAST_CHAT',
-      BROADCAST_ENTRY: 'BROADCAST_ENTRY',
-      BROADCAST_LEAVE: 'BROADCAST_LEAVE',
-    },
-    ws: {
-      OPEN: 'OPEN',
-      CLOSE: 'CLOSE',
-      FAIL_LOGOUT_WHILE_WS_CONNECTED: 'FAIL_LOGOUT_WHILE_WS_CONNECTED',
-    }
-  }
 
   constructor(rootElement) {
     this.makeElements(rootElement)
@@ -99,8 +74,8 @@ export default class Client {
   }
 
   async connect() {
-    await this.handler({ type: 'ASK_LOGIN' })
-    await this.handler({ type: 'ASK_WS_OPEN' })
+    await this.handler({ type: Constants.client.ASK_LOGIN })
+    await this.handler({ type: Constants.client.ASK_WS_OPEN })
   }
 
   async login() {
@@ -156,12 +131,12 @@ export default class Client {
   activateListeners() {
     this.loginButt.addEventListener('click', async () => {
       if (!this.isLoggedIn) {
-        this.handler({ type: Client.action.client.ASK_LOGIN})
+        this.handler({ type: Constants.client.ASK_LOGIN})
       } else {
         if (this.isChatConnected) {
-          this.handler({ type: Client.action.client.FAIL_LOGOUT_WHILE_CONNECTED })
+          this.handler({ type: Constants.client.FAIL_LOGOUT_WHILE_CONNECTED })
         } else {
-          this.handler({type: 'ASK_LOGOUT'})
+          this.handler({type: Constants.client.ASK_LOGOUT})
         }
       }
     })
@@ -170,34 +145,36 @@ export default class Client {
     this.connectButt.addEventListener('click', async () => {
       if (this.isLoggedIn) {
         if (this.isChatConnected) {
-          this.handler({ type: Client.action.client.ASK_WS_CLOSE })
+          this.handler({ type: Constants.client.ASK_WS_CLOSE })
         } else {
-          this.handler({ type: Client.action.client.ASK_WS_OPEN })
+          this.handler({ type: Constants.client.ASK_WS_OPEN })
         }
       } else {
-        this.handler({ type: Client.action.client.FAIL_CONNECT_WHILE_LOGGEDOUT})
+        this.handler({ type: Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT})
       }
     })
 
-    this.sendButt.addEventListener('click', (e) => {
+    const handleSend = (e) => {
       if (!this.ws) {
-        this.handler({ type: 'SEND_FAIL_WHILE_DISCONNECTED' })
+        this.handler({ type: Constants.client.FAIL_SEND_WHILE_DISCONNECTED })
       } else {
         if (e.target.id === 'send') {
           if (this.userTextInput.value.trim().length > 0) {
-            this.handler({ type: 'SEND_CHAT' })
+            this.handler({ type: Constants.client.SEND_CHAT })
             this.userTextInput.value = ''
           }
         } else if (e.target.id === 'userTextInput') {
           if (e.target.value.trim().length > 0) {
-            this.handler({ type: 'SEND_CHAT' })
+            this.handler({ type: Constants.client.SEND_CHAT })
             e.target.value = ''
           }
         } else {
           console.error('Unhandled send event')
         }
       }
-    })
+    }
+
+    this.sendButt.addEventListener('click', handleSend)
 
     this.userTextInput.addEventListener('keydown', (e) => {
       e.key === 'Enter' && handleSend(e)
@@ -240,21 +217,21 @@ export default class Client {
     console.log(`ACTION: ${action.type}`)
 
     switch (action.type) {
-      case Client.action.client.ASK_LOGIN:
+      case Constants.client.ASK_LOGIN:
         const loginMessage = await this.login()
         this.handler(loginMessage)
         break
 
-      case Client.action.client.ASK_LOGOUT:
+      case Constants.client.ASK_LOGOUT:
         const logoutData = await this.logout()
         this.isLoggedIn = false
         this.isChatConnected = false
         this.handler(logoutData)
         break
 
-      case Client.action.client.SEND_CHAT:
+      case Constants.client.SEND_CHAT:
         const chatMessage = {
-          type: 'userSendChat',
+          type: Constants.client.SEND_CHAT,
           payload: {
             body: this.userTextInput.value,
             time: new Date(),
@@ -263,7 +240,7 @@ export default class Client {
         this.ws.send(JSON.stringify(chatMessage))
         break
       
-      case Client.action.client.FAIL_LOGOUT_WHILE_CONNECTED:
+      case Constants.client.FAIL_LOGOUT_WHILE_CONNECTED:
         this.chatbox.addChatFromClient(this, '\
           You must disconnect from chat before logging out from site. \
           <auto-disconnect will be enable in future release>\
@@ -271,31 +248,31 @@ export default class Client {
         break;
 
       // * Client tried sending message while disconnected
-      case Client.action.client.FAIL_SEND_WHILE_DISCONNECTED:
+      case Constants.client.FAIL_SEND_WHILE_DISCONNECTED:
         this.chatbox.addChatFromClient(this, `Cannot send message, you are disconnected`)
         break
 
-      case Client.action.ws.FAIL_LOGOUT_WHILE_WS_CONNECTED:
+      case Constants.ws.FAIL_LOGOUT_WHILE_WS_CONNECTED:
         this.chatbox.addChatFromClient(this, `There is no ws connection to close while logged out`)
         break
 
-      case Client.action.client.FAIL_CONNECT_WHILE_LOGGEDOUT:
+      case Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT:
         this.chatbox.addChatFromClient(this, `You must login before connecting to chat`)
         break
 
       // * From Server
 
-      case Client.action.server.LOGGEDIN:
+      case Constants.server.LOGGEDIN:
         this.isLoggedIn = true
         this.chatbox.addChatFromServer(action)
         break
 
-      case Client.action.server.LOGGEDOUT:
+      case Constants.server.LOGGEDOUT:
         this.isLoggedIn = false
         this.chatbox.addChatFromServer(action)
         break
 
-      case Client.action.server.WELCOME:
+      case Constants.server.UNICAST_WELCOME:
         this.handle = action.payload.handle
         this.usersList = action.payload.usersList
         // action.payload.usersList.forEach(user => {
@@ -304,24 +281,24 @@ export default class Client {
         this.chatbox.addChatFromServer(action)
         break
 
-      case Client.action.server.BROADCAST_CHAT:
+      case Constants.server.BROADCAST_CHAT:
         this.chatbox.addChatFromServer(action)
         break
 
-      case Client.action.server.BROADCAST_ENTRY:
+      case Constants.server.BROADCAST_ENTRY:
         // TODO add to usersList
         this.chatbox.addChatFromServer(action)
         this.usersList = action.payload.usersList
         // UsersList.addUsersList(action.payload.userHandle)
         break
 
-      case Client.action.server.BROADCAST_LEAVE:
+      case Constants.server.BROADCAST_LEAVE:
         this.chatbox.addChatFromServer(action)
         console.log(`server userslist on leave`, action.payload.usersList)
         this.usersList = action.payload.usersList
         break
 
-      case Client.action.client.ASK_WS_OPEN:
+      case Constants.client.ASK_WS_OPEN:
         // CSDR await?
         // ws = new WebSocket(`wss://${location.host}`)
         this.ws = new WebSocket(`wss://${ENV.SERVER_HOST}:${ENV.SERVER_PORT}`)
@@ -340,15 +317,15 @@ export default class Client {
               break
             case 'open':
               // Can only open when logged in
-              this.handler({ type: Client.action.ws.OPEN })
+              this.handler({ type: Constants.ws.OPEN })
               break
             case 'close':
               // WS sends a close event even when a new ws object fails to connect
               // Thus this case block must:
               if (!this.isLoggedIn) {              // handle close events when not logged in
-                this.handler({ type: Client.action.ws.FAIL_WS_CLOSE_WHILE_LOGGEDOUT})
+                this.handler({ type: Constants.ws.FAIL_WS_CLOSE_WHILE_LOGGEDOUT})
               } else if (this.isChatConnected) {   // handle close events when logged in
-                this.handler({ type: Client.action.ws.CLOSE })
+                this.handler({ type: Constants.ws.CLOSE })
               }
               break
             case 'message':
@@ -362,7 +339,7 @@ export default class Client {
         }
         break
       
-      case Client.action.client.ASK_WS_CLOSE:
+      case Constants.client.ASK_WS_CLOSE:
         this.chatbox.addChatFromClient(this, `====== You left the chat. Bye! ======`)
         this.isChatConnected = false
         this.room = ''
@@ -378,11 +355,11 @@ export default class Client {
       // * WebSocket Server Receipts
       // ***
 
-      case Client.action.ws.OPEN:
+      case Constants.ws.OPEN:
         this.isChatConnected = true
         this.room = 'general'
         break
-      case Client.action.ws.CLOSE:
+      case Constants.ws.CLOSE:
         // reachable when server restarts or sends its close signal first
         this.chatbox.addChatFromClient(this, `====== The server closed your connect. Adios! ======`)
         this.isChatConnected = false

@@ -5,6 +5,7 @@
   "version": "0.0.0",
   "description": "learning websockets ws lib",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "DEBUG=express-session concurrently 'vite --host' 'nodemon server.js'",
     "start": "DEBUG=vite* vite serve --host",
