@@ -83,8 +83,7 @@ app.post('/logout', (req, res) => {
   })
 })
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const server = https.createServer(
   {
     key: fs.readFileSync(path.resolve(__dirname, './.ssl/key.pem')),

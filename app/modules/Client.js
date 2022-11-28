@@ -141,7 +141,6 @@ export default class Client {
       }
     })
     
-
     this.connectButt.addEventListener('click', async () => {
       if (this.isLoggedIn) {
         if (this.isChatConnected) {
@@ -377,5 +376,13 @@ export default class Client {
         console.log('unhandled action:', action)
     }
     this.render()
+  }
+
+  syncUsersList() {
+
+  }
+
+  syncChatLines() {
+
   }
 }
