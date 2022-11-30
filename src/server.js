@@ -44,7 +44,7 @@ app.post('/login', (req, res) => {
 
   // TODO (prod) session reload to re-populate req.session
   const message = {
-    type: Constants.server.LOGGEDIN,
+    type: Constants.server.LOGGEDIN.word,
     payload: {
       sender: 'knet',
       body: `You logged in.`,
@@ -72,7 +72,7 @@ app.post('/logout', (req, res) => {
     }
 
     const message = {
-      type: Constants.server.LOGGEDOUT,
+      type: Constants.server.LOGGEDOUT.word,
       payload: {
         sender: 'knet',
         body: `You are logged out.`,
@@ -154,11 +154,11 @@ wss.on('connection', function (ws, req, client) {
     const usersList = Object.values(sessionUsers).map(user => user.handle)
 
     const userWelcomeMessage = {
-      type: Constants.server.UNICAST_WELCOME,
+      type: Constants.server.UNICAST_WELCOME.word,
       payload: {
         sender: "room-general",
         time: new Date(),
-        body: `====== Hi <em>${handle}</em>, welcome to kenny.net general chat ======`,
+        body: Constants.server.UNICAST_WELCOME.text`${handle}`,
         handle,
         usersList,
         chatCounter: chatCounter++,
@@ -168,11 +168,11 @@ wss.on('connection', function (ws, req, client) {
 
     // Broadcast entering user to clients
     const roomUserEntryMessage = {
-      type: Constants.server.BROADCAST_ENTRY,
+      type: Constants.server.BROADCAST_ENTRY.word,
       payload: {
         sender: "room-general",
         time: new Date(),
-        body: `<em>${handle}</em> entered the chat.`,
+        body: Constants.server.BROADCAST_ENTRY.text`${handle}`,
         handle,
         usersList,
         chatCounter: chatCounter++,
@@ -184,9 +184,9 @@ wss.on('connection', function (ws, req, client) {
       let message = JSON.parse(rawMessage)
       // TODO handled by Message class, arg msg type
       switch (message.type) {
-        case Constants.client.SEND_CHAT:
+        case Constants.client.SEND_CHAT.word:
           message.payload.sender = handle
-          message.type = Constants.server.BROADCAST_CHAT
+          message.type = Constants.server.BROADCAST_CHAT.word
           message.payload.chatCounter = chatCounter++
           broadcastMessage(message)
           break
@@ -199,11 +199,11 @@ wss.on('connection', function (ws, req, client) {
 
   ws.on('close', function () {
     const roomUserLeft = {
-      type: Constants.server.BROADCAST_LEAVE,
+      type: Constants.server.BROADCAST_LEAVE.word,
       payload: {
         sender: "room-general",
         time: new Date(),
-        body: `<em>${sessionUsers[req.session.id].handle}</em> left the chat.`,
+        body: Constants.server.BROADCAST_LEAVE.text`${sessionUsers[req.session.id].handle}`,
         chatCounter: chatCounter++,
       }
     }

@@ -17,6 +17,3 @@ client.connect()
 // TODO Use session if exists upon document load
 // get handle from session
 // dispatch action: client to logged in state
-
-
-  console.log(`dont change nodement`, )
