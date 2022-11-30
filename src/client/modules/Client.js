@@ -73,15 +73,12 @@ export default class Client {
     this.inputPanel.appendChild(this.sendButt)
   }
 
-  
-
   async connect() {
     await this.handler({ type: Constants.client.ASK_LOGIN.word })
     await this.handler({ type: Constants.client.ASK_WS_OPEN.word })
   }
 
   async login() {
-    console.log(`IN login`, )
     try {
       const response = await fetch(
         `${ENV.URL}/login`, 
@@ -173,9 +170,7 @@ export default class Client {
         }
       }
     }
-
     this.sendButt.addEventListener('click', handleSend)
-
     this.userTextInput.addEventListener('keydown', (e) => {
       e.key === 'Enter' && handleSend(e)
     })
@@ -200,6 +195,8 @@ export default class Client {
     const iterator = this.usersList.keys()
     let key = iterator.next().value
     while (key) {
+      console.log(`key`, key)
+      console.log(`handle`,this.handle)
       html +=
         `<li `
         + `style="color: ${colors[Math.floor(Math.random() * colors.length)]}">`
@@ -218,6 +215,9 @@ export default class Client {
     console.log(`ACTION: ${action.type}`)
 
     switch (action.type) {
+
+      // * From Client
+
       case Constants.client.ASK_LOGIN.word:
         const loginMessage = await this.login()
         this.handler(loginMessage)
@@ -254,43 +254,6 @@ export default class Client {
 
       case Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT.word:
         this.chatbox.addChatFromClient(this, Constants.client.FAIL_CONNECT_WHILE_LOGGEDOUT.text)
-        break
-
-      // * From Server
-
-      case Constants.server.LOGGEDIN.word:
-        this.isLoggedIn = true
-        this.chatbox.addChatFromServer(action)
-        break
-
-      case Constants.server.LOGGEDOUT.word:
-        this.isLoggedIn = false
-        this.chatbox.addChatFromServer(action)
-        break
-
-      case Constants.server.UNICAST_WELCOME.word:
-        this.handle = action.payload.handle
-        for (let i = 0; i < action.payload.usersList.length; ++i) {
-          this.usersList.set(action.payload.usersList[i], null)
-        }
-        this.chatbox.addChatFromServer(action)
-        break
-
-      case Constants.server.BROADCAST_CHAT.word:
-        this.chatbox.addChatFromServer(action)
-        break
-
-      case Constants.server.BROADCAST_ENTRY.word:
-        // TODO add to usersList
-        this.chatbox.addChatFromServer(action)
-        this.usersList.set(action.payload.handle, null)
-        // UsersList.addUsersList(action.payload.userHandle)
-        break
-
-      case Constants.server.BROADCAST_LEAVE.word:
-        this.chatbox.addChatFromServer(action)
-        console.log(`user left:`, action.payload.handle)
-        this.usersList.delete(action.payload.handle)
         break
 
       case Constants.client.ASK_WS_OPEN.word:
@@ -346,12 +309,50 @@ export default class Client {
         this.ws = null
         break
 
+      // * From Server
+
+      case Constants.server.LOGGEDIN.word:
+        this.isLoggedIn = true
+        this.chatbox.addChatFromServer(action)
+        break
+
+      case Constants.server.LOGGEDOUT.word:
+        this.isLoggedIn = false
+        this.chatbox.addChatFromServer(action)
+        break
+
+      case Constants.server.UNICAST_WELCOME.word:
+        this.handle = action.payload.handle
+        for (let i = 0; i < action.payload.usersList.length; ++i) {
+          this.usersList.set(action.payload.usersList[i], null)
+        }
+        this.chatbox.addChatFromServer(action)
+        break
+
+      case Constants.server.BROADCAST_CHAT.word:
+        this.chatbox.addChatFromServer(action)
+        break
+
+      case Constants.server.BROADCAST_ENTRY.word:
+        // TODO add to usersList
+        this.chatbox.addChatFromServer(action)
+        this.usersList.set(action.payload.handle, null)
+        // UsersList.addUsersList(action.payload.userHandle)
+        break
+
+      case Constants.server.BROADCAST_LEAVE.word:
+        this.chatbox.addChatFromServer(action)
+        console.log(`user left:`, action.payload.handle)
+        this.usersList.delete(action.payload.handle)
+        break
+
       // * WebSocket Server Receipts
 
       case Constants.ws.OPEN.word:
         this.isChatConnected = true
         this.room = 'general'
         break
+
       case Constants.ws.CLOSE.word:
         // reachable when server restarts or sends its close signal first
         this.chatbox.addChatFromClient(this, Constants.ws.CLOSE.text)

@@ -129,6 +129,7 @@ wss.on('connection', function (ws, req, client) {
         sender: "room-general",
         time: new Date(),
         body: Constants.server.UNICAST_WELCOME.text`${handle}`,
+        handle,
         usersList,
         chatCounter: chatCounter++,
       }
