@@ -8,7 +8,7 @@ export default class Client {
   room
   handle
   ws
-  usersList = []
+  usersList = new Map()
   chatCounter = 0
 
   constructor(rootElement) {
@@ -123,8 +123,7 @@ export default class Client {
     this.room = null
     this.handle = ''
     this.chatCounter = 0
-    this.ws = null
-    this.usersList = []
+    this.usersList.clear()
     this.chatCounter = 0
   }
 
@@ -195,20 +194,21 @@ export default class Client {
 
   renderUsersList() {
     const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'cyan']
-    const html = this.usersList.reduce((html, handle, i) => (
-        html 
-        + `<li `
-        + `id=${i} `
+    let html = ""
+    const iterator = this.usersList.keys()
+    let key = iterator.next().value
+    while (key) {
+      html +=
+        `<li `
         + `style="color: ${colors[Math.floor(Math.random() * colors.length)]}">`
         + `${
-          handle === this.handle 
-            ? '<strong>(you) ' + handle + '</strong>' 
-            : handle
+          key === this.handle 
+            ? '<strong>(you) ' + key + '</strong>' 
+            : key
         }`
         + `</li>`
-      )
-    , "")
-
+      key = iterator.next().value
+    }
     return html
   }
 
@@ -268,7 +268,12 @@ export default class Client {
 
       case Constants.server.UNICAST_WELCOME.word:
         this.handle = action.payload.handle
-        this.usersList = action.payload.usersList
+        console.log(`actionpayloaduserslist`, action.payload.usersList)
+        for (let i = 0; i < action.payload.usersList.length; ++i) {
+          this.usersList.set(action.payload.usersList[i], null)
+        }
+        
+        // this.usersList = action.payload.usersList
         // action.payload.usersList.forEach(user => {
         //   UsersList.addUsersList(user)
         // })
@@ -282,14 +287,14 @@ export default class Client {
       case Constants.server.BROADCAST_ENTRY.word:
         // TODO add to usersList
         this.chatbox.addChatFromServer(action)
-        this.usersList = action.payload.usersList
+        this.usersList.set(action.payload.handle, null)
         // UsersList.addUsersList(action.payload.userHandle)
         break
 
       case Constants.server.BROADCAST_LEAVE.word:
         this.chatbox.addChatFromServer(action)
-        console.log(`server userslist upon user leave`, action.payload.usersList)
-        this.usersList = action.payload.usersList
+        console.log(`user left:`, action.payload.handle)
+        this.usersList.delete(action.payload.handle)
         break
 
       case Constants.client.ASK_WS_OPEN.word:
@@ -335,9 +340,10 @@ export default class Client {
       case Constants.client.ASK_WS_CLOSE.word:
         this.chatbox.addChatFromClient(this, Constants.client.ASK_WS_CLOSE.text)
         this.isChatConnected = false
-        this.room = ''
-        this.usersList = []
-
+        this.room = null
+        this.handle = null
+        this.chatCounter = 0
+        this.usersList.clear()
         // Client closes itself without waiting for a response
         this.ws.close(1000, 'user intentionally disconnected')
         this.ws.onerror = this.ws.onopen = this.ws.onclose = null

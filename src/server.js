@@ -98,7 +98,7 @@ const wss = new WebSocketServer({ noServer: true, clientTracking: true })
 const sessionUsers = {}    // Dictionary, userId as key
 
 // XPLOR json-server
-let handleNamePool = [
+let handlePool = [
   'pikachu',
   // 'bulbasaur',
   'miketyson',
@@ -141,25 +141,23 @@ server.on('upgrade', (req, socket, head) => {
 
 wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
-  if (handleNamePool.length === 0) {
-    console.debug(`handleNamePool empty, broadcast room full`, )
+  if (handlePool.length === 0) {
+    console.debug(`handlePool empty, broadcast room full`, )
     throw new Error(`ran out of assignable usernames aka room full, debugme`)
   } else {
     const handle = getNameFromPool()
     sessionUsers[req.session.id] = { ws, handle }
   
     console.log(`user connected(sess-id:${req.session.id}), connection count: (tmp hidden): `)
+    const usersList = Object.values(sessionUsers).map(o => o.handle)
     
     // Send welcome message to user entering room
-    const usersList = Object.values(sessionUsers).map(user => user.handle)
-
     const userWelcomeMessage = {
       type: Constants.server.UNICAST_WELCOME.word,
       payload: {
         sender: "room-general",
         time: new Date(),
         body: Constants.server.UNICAST_WELCOME.text`${handle}`,
-        handle,
         usersList,
         chatCounter: chatCounter++,
       }
@@ -174,7 +172,6 @@ wss.on('connection', function (ws, req, client) {
         time: new Date(),
         body: Constants.server.BROADCAST_ENTRY.text`${handle}`,
         handle,
-        usersList,
         chatCounter: chatCounter++,
       }
     }
@@ -182,7 +179,6 @@ wss.on('connection', function (ws, req, client) {
 
     ws.on('message', function (rawMessage) {
       let message = JSON.parse(rawMessage)
-      // TODO handled by Message class, arg msg type
       switch (message.type) {
         case Constants.client.SEND_CHAT.word:
           message.payload.sender = handle
@@ -196,19 +192,20 @@ wss.on('connection', function (ws, req, client) {
     })
   }
 
-
   ws.on('close', function () {
+    const handle = sessionUsers[req.session.id].handle
     const roomUserLeft = {
       type: Constants.server.BROADCAST_LEAVE.word,
       payload: {
         sender: "room-general",
         time: new Date(),
         body: Constants.server.BROADCAST_LEAVE.text`${sessionUsers[req.session.id].handle}`,
+        handle,
         chatCounter: chatCounter++,
       }
     }
+    handlePool.push(handle)
     delete sessionUsers[req.session.id]
-    roomUserLeft.payload.usersList = Object.values(sessionUsers).map(o => o.handle)
     broadcastMessage(roomUserLeft)
     console.log(`user ${req.session.id} Client disconnected, current connections(tmp hidden): `)
     // console.log(`${Object.keys(sessionUsers)}`)
@@ -248,6 +245,6 @@ wss.on('listen', () => {
 })
 
 function getNameFromPool() {
-  return handleNamePool
-    .splice(Math.floor(Math.random()*handleNamePool.length), 1)[0]
+  return handlePool
+    .splice(Math.floor(Math.random()*handlePool.length), 1)[0]
 }
