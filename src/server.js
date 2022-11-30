@@ -8,6 +8,8 @@ import cors from 'cors'
 import session from 'express-session'
 import WebSocket from 'ws'
 import { WebSocketServer } from 'ws'
+import DOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 
 // TODO dev only, direct import; prod build step copies app/modules/Constants.js to server prod dir
 import Constants from './client/modules/Constants.js'
@@ -216,7 +218,14 @@ wss.on('connection', function (ws, req, client) {
   })
 
   function broadcastMessage(message, ws=null) {
-    console.log(`Broadcasting message "${message.payload.body}" from sender ${message.payload.sender}`)
+    const dirtyBody = message.payload.body
+
+    const window = new JSDOM('').window;
+    // @ts-expect-error window type is mistaken for DOMWindow when it's really Window
+    const purify = DOMPurify(window);
+    const cleanBody = purify.sanitize(dirtyBody);
+
+    console.log(`Broadcasting message "${cleanBody}" from sender ${message.payload.sender}`)
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN && client !== ws) {
         client.send(JSON.stringify(message))

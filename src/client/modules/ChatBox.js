@@ -30,17 +30,7 @@ export default class ChatBox {
   
     const chatLineText = document.createElement('span')
     chatLineText.className = 'chatLineText'
-    let text = body;
-  
-    // VIGIL parse
-      // replace html entities
-      // sanitize(in vein of Sanitizer API): 
-      // strip out XSS-relevant input
-      // strip out script tags
-      // strip out custom elements
-      // strip out comments
-    
-    chatLineText.innerHTML = text;
+    chatLineText.innerHTML = body;
   
     chatLine.appendChild(chatLineText)
     fragment.appendChild(chatLine)

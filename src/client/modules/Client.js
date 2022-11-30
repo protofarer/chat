@@ -268,15 +268,9 @@ export default class Client {
 
       case Constants.server.UNICAST_WELCOME.word:
         this.handle = action.payload.handle
-        console.log(`actionpayloaduserslist`, action.payload.usersList)
         for (let i = 0; i < action.payload.usersList.length; ++i) {
           this.usersList.set(action.payload.usersList[i], null)
         }
-        
-        // this.usersList = action.payload.usersList
-        // action.payload.usersList.forEach(user => {
-        //   UsersList.addUsersList(user)
-        // })
         this.chatbox.addChatFromServer(action)
         break
 

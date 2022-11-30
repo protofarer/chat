@@ -15,10 +15,12 @@
   },
   "dependencies": {
     "cors": "2.x",
+    "dompurify": "^2.4.1",
     "dotenv": "16.x",
     "express": "4.x",
     "express-session": "1.x",
     "isomorphic-ws": "4.x",
+    "jsdom": "^20.0.3",
     "uuid": "8.x",
     "ws": "8.x"
   },
