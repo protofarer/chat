@@ -5,10 +5,10 @@ import fs from 'fs';
 
 // }
 export default defineConfig({
-  root: "app",
+  root: "src/client",
   // root: ".",
   mode: "development",
-  envDir: "../",
+  envDir: "../../",
   // envDir: ".",
   // publicDir: '../public',
   // publicDir: './app',

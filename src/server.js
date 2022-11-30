@@ -1,3 +1,4 @@
+'use strict'    // needed?
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -9,7 +10,7 @@ import WebSocket from 'ws'
 import { WebSocketServer } from 'ws'
 
 // TODO dev only, direct import; prod build step copies app/modules/Constants.js to server prod dir
-import Constants from './app/modules/Constants.js'
+import Constants from './client/modules/Constants.js'
 
 import dotenv from 'dotenv'
 dotenv.config()
@@ -86,8 +87,8 @@ app.post('/logout', (req, res) => {
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const server = https.createServer(
   {
-    key: fs.readFileSync(path.resolve(__dirname, './.ssl/key.pem')),
-    cert: fs.readFileSync(path.resolve(__dirname, './.ssl/cert.pem'))
+    key: fs.readFileSync(path.resolve(__dirname, './../.ssl/key.pem')),
+    cert: fs.readFileSync(path.resolve(__dirname, './../.ssl/cert.pem'))
   }, 
   app
 )
@@ -239,12 +240,11 @@ wss.on('error', (event) => {
 const HOST = process.env.HOST
 const PORT = process.env.PORT
 server.listen(PORT, HOST, () => {
-  console.log(`listening on https://${HOST}:${PORT}`)
+  console.log(`listening on https://${HOST}:${PORT} in ${app.get("env")} mode`)
 })
 
 wss.on('listen', () => {
   console.log(`IN wss.on listen`, )
-  // console.log(`listening on wss://${HOST}:${PORT}`)
 })
 
 function getNameFromPool() {

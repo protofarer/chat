@@ -73,6 +73,8 @@ export default class Client {
     this.inputPanel.appendChild(this.sendButt)
   }
 
+  
+
   async connect() {
     await this.handler({ type: Constants.client.ASK_LOGIN })
     await this.handler({ type: Constants.client.ASK_WS_OPEN })
