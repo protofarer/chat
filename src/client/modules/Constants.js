@@ -57,6 +57,23 @@ export default {
         return `====== <em>${handle}</em> left the chat. ======`
       }
     },
+    HANDLE_POOL: [
+      'raistlyn',
+      'kaztheminotaur',
+      // 'miketyson',
+      // 'pikachu',
+      // 'stevejobs',
+      // 'eddie',
+      // 'guile',
+      // 'bulbasaur',
+      // 'ryu',
+      // 'woolymammoth',
+      // 'barney',
+      // 'schopenhauer',
+      // 'vanhalen',
+      // 'lylading',
+      // 'scarface'
+    ],
   },
   ws: {
     OPEN: {

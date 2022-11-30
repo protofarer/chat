@@ -87,9 +87,11 @@ export default class Client {
         `${ENV.URL}/login`, 
         { method: 'POST', credentials: 'same-origin' }
       )
-      return response.ok 
-        ? await response.json()
-        : new Error('Login failed')
+      if (response.ok) {
+        return await response.json()
+      } else {
+        throw new Error('Login failed')
+      }
     } catch (err) {
       if (err.name === 'TypeError') {
         console.error(`${err.message}`)
@@ -113,7 +115,7 @@ export default class Client {
         console.log('Logout failed')
       }
     } catch (err) {
-      new Error(`Unhandled logout error: ${err.message}`)
+      throw new Error(`Unhandled logout error: ${err.message}`)
     }
   }
 

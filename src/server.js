@@ -16,12 +16,7 @@ import Constants from './client/modules/Constants.js'
 
 import dotenv from 'dotenv'
 dotenv.config()
-// require('dotenv').config()
-
-
-
 const app = express()
-
 const sessionParser = session({
   saveUninitialized: false,
   secret: process.env.SECRET,
@@ -96,36 +91,15 @@ const server = https.createServer(
 )
 
 const wss = new WebSocketServer({ noServer: true, clientTracking: true })
-
 const sessionUsers = {}    // Dictionary, userId as key
-
 // XPLOR json-server
-let handlePool = [
-  'pikachu',
-  // 'bulbasaur',
-  'miketyson',
-  // 'stevejobs',
-  // 'eddie',
-  // 'guile',
-  'ryu',
-  // 'kaztheminotaur',
-  // 'raistlyn',
-  // 'woolymammoth',
-  // 'barney',
-  // 'schopenhauer',
-  // 'vanhalen',
-  // 'lylading',
-  // 'scarface'
-]
+let chatCounter = 0
+const generateHandle = HandleAssigner()
 
-let chatCounter = 0;
-
-// ?
 server.on('upgrade', (req, socket, head) => {
   console.log(`IN server.on upgrade`, )
-  
-  console.log('Parsing session from req')
   sessionParser(req, {}, () => {
+    console.log('Parsing session from req')
     if (!req.session.id) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
       socket.destroy()
@@ -140,14 +114,9 @@ server.on('upgrade', (req, socket, head) => {
   })
 })
 
-
 wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
-  if (handlePool.length === 0) {
-    console.debug(`handlePool empty, broadcast room full`, )
-    throw new Error(`ran out of assignable usernames aka room full, debugme`)
-  } else {
-    const handle = getNameFromPool()
+    const handle = generateHandle()
     sessionUsers[req.session.id] = { ws, handle }
   
     console.log(`user connected(sess-id:${req.session.id}), connection count: (tmp hidden): `)
@@ -192,7 +161,6 @@ wss.on('connection', function (ws, req, client) {
           console.log('Error: Unhandled message type:', message.type)
       }
     })
-  }
 
   ws.on('close', function () {
     const handle = sessionUsers[req.session.id].handle
@@ -206,7 +174,6 @@ wss.on('connection', function (ws, req, client) {
         chatCounter: chatCounter++,
       }
     }
-    handlePool.push(handle)
     delete sessionUsers[req.session.id]
     broadcastMessage(roomUserLeft)
     console.log(`user ${req.session.id} Client disconnected, current connections(tmp hidden): `)
@@ -219,7 +186,6 @@ wss.on('connection', function (ws, req, client) {
 
   function broadcastMessage(message, ws=null) {
     const dirtyBody = message.payload.body
-
     const window = new JSDOM('').window;
     // @ts-expect-error window type is mistaken for DOMWindow when it's really Window
     const purify = DOMPurify(window);
@@ -253,7 +219,16 @@ wss.on('listen', () => {
   console.log(`IN wss.on listen`, )
 })
 
-function getNameFromPool() {
-  return handlePool
-    .splice(Math.floor(Math.random()*handlePool.length), 1)[0]
+function HandleAssigner() {
+  let currentFreq = 0
+  let freeHandles = new Array(...Constants.server.HANDLE_POOL) // aka list of handles that share lowest frequency
+  return () => {
+    // get array of lowest freq base used handles, then randomly pick among
+    if (freeHandles.length === 0) {
+      currentFreq++
+      freeHandles = Constants.server.HANDLE_POOL.map(x => `${x}(${currentFreq})`)
+    }
+    return freeHandles
+      .splice(Math.floor(Math.random()*freeHandles.length), 1)[0]
+  }
 }
