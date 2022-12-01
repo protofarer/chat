@@ -10,11 +10,9 @@ import WebSocket from 'ws'
 import { WebSocketServer } from 'ws'
 import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
-
-// TODO dev only, direct import; prod build step copies app/modules/Constants.js to server prod dir
-import Constants from './client/modules/Constants.js'
-
+import Constants from './client/modules/Constants.js' // TODO dev only, direct import; prod build step copies app/modules/Constants.js to server prod dir
 import dotenv from 'dotenv'
+
 dotenv.config()
 const app = express()
 const sessionParser = session({
@@ -92,7 +90,6 @@ const server = https.createServer(
 
 const wss = new WebSocketServer({ noServer: true, clientTracking: true })
 const sessionUsers = {}    // Dictionary, userId as key
-// XPLOR json-server
 let chatCounter = 0
 const generateHandle = HandleAssigner()
 
@@ -105,9 +102,6 @@ server.on('upgrade', (req, socket, head) => {
       socket.destroy()
       return
     }
-
-    console.log('Session parsed:')
-
     wss.handleUpgrade(req, socket, head, function (ws) {
       wss.emit('connection', ws, req)
     })
@@ -177,7 +171,7 @@ wss.on('connection', function (ws, req, client) {
     }
     delete sessionUsers[req.session.id]
     broadcastMessage(roomUserLeft)
-    console.log(`user ${req.session.id} Client disconnected, current connections(tmp hidden): `)
+    console.log(`user ${req.session.id} ws disconnected`)
     // console.log(`${Object.keys(sessionUsers)}`)
 
     // UNSURE... ws stays in CLOSED readystate on client when DISCONNECT clicked
@@ -232,4 +226,44 @@ function HandleAssigner() {
     return freeHandles
       .splice(Math.floor(Math.random()*freeHandles.length), 1)[0]
   }
+}
+
+// TODO shutdown gracefully
+// - track connections
+// - dont accept new connections during shutdown
+// - communicate shutdown to clients
+// - destroy sockets
+// - cleanup?
+// - handle SIGTERM and SIGINT and SIGKILL? SIGHUP? SIGUSR2? SIGBREAK?
+
+setInterval(() => server.getConnections(
+  (err, connections) => console.log(`${connections} connections currently open`)
+), 1000)
+
+process.on('SIGTERM', shutDown)
+process.on('SIGINT', shutDown)
+
+let connections = []
+
+server.on('connection', connection => {
+  connections.push(connection)
+  connection.on('close', () => connections = connections
+    .filter(curr => curr !== connection)
+  )
+})
+
+function shutDown() {
+  console.log(`SIGKILL'ed, graceful shutdown starting...`, )
+  server.close(() => {
+    console.log(`Closed out remaining connections`, )
+    process.exit(0)
+  })
+  
+  setTimeout(() => {
+    console.error(`Connections took too long to close, forcefully shutting down`)
+    process.exit(1)
+  })
+
+  connections.forEach(curr => curr.end())
+  setTimeout(() => connections.forEach(curr => curr.destroy(), 5000))
 }

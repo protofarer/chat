@@ -1,4 +1,3 @@
-import { ENV } from '../index.js'
 import ChatBox from './ChatBox.js'
 import Constants from './Constants.js'
 
@@ -12,8 +11,21 @@ export default class Client {
   chatCounter = 0
 
   constructor(rootElement) {
+    this.setEnv()
     this.makeElements(rootElement)
     this.activateListeners()
+  }
+
+  setEnv() {
+    this.ENV = new (function() {
+      this.SERVER_PORT =  import.meta.env 
+        ? import.meta.env.VITE_SERVER_PORT 
+        : 3000
+      this.SERVER_HOST = import.meta.env 
+        ? `${import.meta.env.VITE_SERVER_HOST}`
+        : `0.0.0.0`
+      this.URL = `https://${this.SERVER_HOST}:${this.SERVER_PORT}`
+    })()
   }
 
   makeElements(rootElement) {
@@ -81,7 +93,7 @@ export default class Client {
   async login() {
     try {
       const response = await fetch(
-        `${ENV.URL}/login`, 
+        `${this.ENV.URL}/login`, 
         { method: 'POST', credentials: 'same-origin' }
       )
       if (response.ok) {
@@ -101,7 +113,7 @@ export default class Client {
   async logout() {
     try {
       const response = await fetch(
-        `${ENV.URL}/logout`,
+        `${this.ENV.URL}/logout`,
         { method: 'POST', credentials: 'same-origin' }
       )
       if (response.ok) {
@@ -195,8 +207,6 @@ export default class Client {
     const iterator = this.usersList.keys()
     let key = iterator.next().value
     while (key) {
-      console.log(`key`, key)
-      console.log(`handle`,this.handle)
       html +=
         `<li `
         + `style="color: ${colors[Math.floor(Math.random() * colors.length)]}">`
@@ -259,7 +269,7 @@ export default class Client {
       case Constants.client.ASK_WS_OPEN.word:
         // CSDR await?
         // ws = new WebSocket(`wss://${location.host}`)
-        this.ws = new WebSocket(`wss://${ENV.SERVER_HOST}:${ENV.SERVER_PORT}`)
+        this.ws = new WebSocket(`wss://${this.ENV.SERVER_HOST}:${this.ENV.SERVER_PORT}`)
         this.ws.addEventListener('open', handleWSEvents.bind(this))
         this.ws.addEventListener('message', handleWSEvents.bind(this))
         this.ws.addEventListener('error', handleWSEvents.bind(this))
