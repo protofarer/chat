@@ -49,7 +49,7 @@ button:hover, button:focus {
   font-weight: bolder;
 }
 
-#topContainer {
+#container {
   padding: 5px;
   margin: 0;
   height: 90vh;
@@ -60,7 +60,7 @@ button:hover, button:focus {
   /* border: 1px solid green; */
 }
 
-#menuContainer {
+#topBar {
   display: flex;
   flex-flow: row nowrap;
   /* gap: 10px; */
@@ -75,7 +75,7 @@ button:hover, button:focus {
   min-width: 400px;
   border: 6px double var(--orderLineColor-dull);
   
-  flex-grow: 4;
+  flex-grow: 0;
   /* flex-shrink: 1; */
   
   display: flex;
@@ -123,7 +123,7 @@ button:hover, button:focus {
   border-bottom: 1px solid orange;
 }
 
-.usersListSpacer {
+#usersListSpacer {
   margin: 0;
   padding: 0;
   min-width: 150px;

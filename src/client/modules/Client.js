@@ -29,17 +29,17 @@ export default class Client {
   }
 
   makeElements(rootElement) {
-    this.topContainer = document.createElement('div')
-    this.topContainer.id = 'topContainer'
-    rootElement.appendChild(this.topContainer)
+    this.container = document.createElement('div')
+    this.container.id = 'container'
+    rootElement.appendChild(this.container)
 
-    this.menuContainer = document.createElement('div')
-    this.menuContainer.id = 'menuContainer'
-    this.topContainer.appendChild(this.menuContainer)
+    this.topBar = document.createElement('div')
+    this.topBar.id = 'topBar'
+    this.container.appendChild(this.topBar)
 
     this.menu = document.createElement('menu')
     this.menu.id = 'menu'
-    this.menuContainer.appendChild(this.menu)
+    this.topBar.appendChild(this.menu)
 
     this.loginButt = document.createElement('button')
     this.loginButt.id = 'login'
@@ -53,11 +53,11 @@ export default class Client {
 
     this.usersListSpacer = document.createElement('div')
     this.usersListSpacer.id = 'usersListSpacer'
-    this.menuContainer.appendChild(this.usersListSpacer)
+    this.topBar.appendChild(this.usersListSpacer)
 
     this.chatContainer = document.createElement('div')
     this.chatContainer.id = 'chatContainer'
-    this.topContainer.appendChild(this.chatContainer)
+    this.container.appendChild(this.chatContainer)
 
     this.chatbox = new ChatBox(this.chatContainer)
 
@@ -67,11 +67,11 @@ export default class Client {
 
     this.chatBoxSpacer = document.createElement('div')
     this.chatBoxSpacer.id = 'chatBoxSpacer'
-    this.topContainer.appendChild(this.chatBoxSpacer)
+    this.container.appendChild(this.chatBoxSpacer)
 
     this.inputPanel = document.createElement('div')
     this.inputPanel.id = 'inputPanel'
-    this.topContainer.appendChild(this.inputPanel)
+    this.container.appendChild(this.inputPanel)
 
     this.userTextInput = document.createElement('input')
     this.userTextInput.id = 'userTextInput'
