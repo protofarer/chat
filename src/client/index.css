@@ -25,6 +25,10 @@ html {
   background-color: var(--pageBackground);
 }
 
+.clientHandle {
+  color: var(--focusColor);
+}
+
 /* https://css-tricks.com/box-sizing/ */
 /* default yet overrideable border-box box-sizing */
 *,

@@ -217,7 +217,9 @@ export default class Client {
       ? '🟢 | DISCONNECT'
       : '🔴 | CONNECT'
 
-    this.chatUsersList.innerHTML = this.renderUsersList()
+    this.chatUsersList.innerHTML = this.usersList.size > 0 
+      ? this.renderUsersList() 
+      : ""
     this.roomInfo.innerHTML = `room: <strong>${this.room ?? "N/A"}</strong>`
     this.toggleTimestampButt.innerText = this.isTimestampShown
     ? '🟢 | ts'
@@ -227,20 +229,18 @@ export default class Client {
 
   renderUsersList() {
     const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'cyan']
-    let html = ""
+    let html = `<li class="clientHandle">${this.handle}</li><hr />`
     const iterator = this.usersList.keys()
-    let key = iterator.next().value
-    while (key) {
-      html +=
-        `<li `
-        + `style="color: ${colors[Math.floor(Math.random() * colors.length)]}">`
-        + `${
-          key === this.handle 
-            ? '<strong>(you) ' + key + '</strong>' 
-            : key
-        }`
-        + `</li>`
-      key = iterator.next().value
+    let handle = iterator.next().value
+    while (handle) {
+      if (handle !== this.handle) {
+        html +=
+          `<li `
+          + `style="color: ${colors[Math.floor(Math.random() * colors.length)]}">`
+          + `${handle}`
+          + `</li>`
+      }
+      handle = iterator.next().value
     }
     return html
   }
