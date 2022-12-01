@@ -262,7 +262,7 @@ function shutDown() {
   setTimeout(() => {
     console.error(`Connections took too long to close, forcefully shutting down`)
     process.exit(1)
-  })
+  }, 10000)
 
   connections.forEach(curr => curr.end())
   setTimeout(() => connections.forEach(curr => curr.destroy(), 5000))
