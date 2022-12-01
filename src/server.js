@@ -120,9 +120,10 @@ wss.on('connection', function (ws, req, client) {
     const userWelcomeMessage = {
       type: Constants.server.UNICAST_WELCOME.word,
       payload: {
-        sender: "room-general",
+        sender: "system",
         time: new Date(),
         body: Constants.server.UNICAST_WELCOME.text`${handle}`,
+        room: Constants.server.DEFAULT_ROOMS[0],
         handle,
         usersList,
         chatCounter: chatCounter++,
@@ -134,7 +135,7 @@ wss.on('connection', function (ws, req, client) {
     const roomUserEntryMessage = {
       type: Constants.server.BROADCAST_ENTRY.word,
       payload: {
-        sender: "room-general",
+        sender: "system",
         time: new Date(),
         body: Constants.server.BROADCAST_ENTRY.text`${handle}`,
         handle,
@@ -162,7 +163,7 @@ wss.on('connection', function (ws, req, client) {
     const roomUserLeft = {
       type: Constants.server.BROADCAST_LEAVE.word,
       payload: {
-        sender: "room-general",
+        sender: "system",
         time: new Date(),
         body: Constants.server.BROADCAST_LEAVE.text`${sessionUsers[req.session.id].handle}`,
         handle,
@@ -236,9 +237,9 @@ function HandleAssigner() {
 // - cleanup?
 // - handle SIGTERM and SIGINT and SIGKILL? SIGHUP? SIGUSR2? SIGBREAK?
 
-setInterval(() => server.getConnections(
-  (err, connections) => console.log(`${connections} connections currently open`)
-), 1000)
+// setInterval(() => server.getConnections(
+//   (err, connections) => console.log(`${connections} connections currently open`)
+// ), 1000)
 
 process.on('SIGTERM', shutDown)
 process.on('SIGINT', shutDown)

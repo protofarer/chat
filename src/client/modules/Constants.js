@@ -6,6 +6,9 @@ export default {
     ASK_LOGOUT: {
       word: 'ASK_LOGOUT',
     },
+    TOGGLE_TIMESTAMPS: {
+      word: 'TOGGLE_TIMESTAMPS',
+    },
     FAIL_LOGOUT_WHILE_CONNECTED: {
       word: 'FAIL_LOGOUT_WHILE_CONNECTED',
       text: 'You must disconnect from chat before logging out from site. <auto-disconnect will be enable in future release>'
@@ -75,6 +78,10 @@ export default {
       'scarface',
       'donatello',
       'mastersplinter',
+    ],
+    DEFAULT_ROOMS: [
+      "general",
+      "fireside",
     ],
   },
   ws: {

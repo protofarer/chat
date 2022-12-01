@@ -10,29 +10,31 @@ export default class ChatBox {
     
     const chatLine = document.createElement('li')
   
-    // * id unique and calculated differently between server and client senders
+    // ! id unique and calculated differently between server and client senders
     chatLine.id = id;
+    chatLine.className = 'chatLine'
   
     if (sender === 'knet') {
-      chatLine.className = "chatLineServer"
+      chatLine.className += " chatLineServer"
     } else if (sender === 'cli' || sender === 'room-general') {
-      chatLine.className = "chatLineClient"
-    } else {
-      chatLine.className = "chatLineGeneral"
-    }
-  
+      chatLine.className += " chatLineClient"
+    }  
+
+    const chatLineTimestamp = document.createElement('span')
+    chatLineTimestamp.className = 'chatLineTimestamp'
+    chatLineTimestamp.innerHTML = `(${time})`
+    chatLine.appendChild(chatLineTimestamp)
+
     const chatLinePrefix = document.createElement('span')
-    let prefixText = ''
-    prefixText += `(${time}) `;
-    prefixText += ` <strong>[${sender}]</strong>: `
-    chatLinePrefix.innerHTML = prefixText;
+    chatLinePrefix.className = 'chatLinePrefix'
+    chatLinePrefix.innerHTML = ` <strong>[${sender}]</strong>: `
     chatLine.appendChild(chatLinePrefix)
   
-    const chatLineText = document.createElement('span')
-    chatLineText.className = 'chatLineText'
-    chatLineText.innerHTML = body;
-  
-    chatLine.appendChild(chatLineText)
+    const chatLineBody = document.createElement('span')
+    chatLineBody.className = 'chatLineBody'
+    chatLineBody.innerHTML = body;
+    chatLine.appendChild(chatLineBody)
+
     fragment.appendChild(chatLine)
     this.element.appendChild(fragment)
   

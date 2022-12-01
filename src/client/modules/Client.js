@@ -9,6 +9,7 @@ export default class Client {
   ws
   usersList = new Map()
   chatCounter = 0
+  isTimestampShown = false
 
   constructor(rootElement) {
     this.setEnv()
@@ -51,9 +52,23 @@ export default class Client {
     this.connectButt.innerText = 'CONNECT'
     this.menu.appendChild(this.connectButt)
 
-    this.usersListSpacer = document.createElement('div')
-    this.usersListSpacer.id = 'usersListSpacer'
-    this.topBar.appendChild(this.usersListSpacer)
+    this.changeRoomButt = document.createElement('button')
+    this.changeRoomButt.id = 'changeRoom'
+    this.changeRoomButt.innerText = 'CHANGE ROOM...'
+    this.menu.appendChild(this.changeRoomButt)
+
+    this.toggleTimestampButt = document.createElement('button')
+    this.toggleTimestampButt.id = 'toggleTimestampButt'
+    this.toggleTimestampButt.innerText = 'TOGG-TS'
+    this.menu.appendChild(this.toggleTimestampButt)
+
+    this.statusBar = document.createElement('div')
+    this.statusBar.id = 'statusBar'
+    this.topBar.appendChild(this.statusBar)
+
+    this.roomInfo = document.createElement('div')
+    this.roomInfo.id = 'roomInfo'
+    this.statusBar.appendChild(this.roomInfo)
 
     this.chatContainer = document.createElement('div')
     this.chatContainer.id = 'chatContainer'
@@ -163,6 +178,10 @@ export default class Client {
       }
     })
 
+    this.toggleTimestampButt.addEventListener('click', async () => {
+      this.handler({ type: Constants.client.TOGGLE_TIMESTAMPS.word })
+    })
+
     const handleSend = (e) => {
       if (!this.ws) {
         this.handler({ type: Constants.client.FAIL_SEND_WHILE_DISCONNECTED.word })
@@ -199,6 +218,11 @@ export default class Client {
       : '🔴 | CONNECT'
 
     this.chatUsersList.innerHTML = this.renderUsersList()
+    this.roomInfo.innerHTML = `room: <strong>${this.room ?? "N/A"}</strong>`
+    this.toggleTimestampButt.innerText = this.isTimestampShown
+    ? '🟢 | ts'
+    : '🔴 | ts'
+
   }
 
   renderUsersList() {
@@ -247,6 +271,20 @@ export default class Client {
           }
         }
         this.ws.send(JSON.stringify(chatMessage))
+        break
+
+      case Constants.client.TOGGLE_TIMESTAMPS.word:
+        this.isTimestampShown = !this.isTimestampShown
+        const timestamps = document.querySelectorAll('.chatLineTimestamp')
+        if (this.isTimestampShown) {
+          timestamps.forEach(ts => 
+              ts.style.setProperty('display', 'inline')
+            )
+        } else {
+          timestamps.forEach(ts => 
+              ts.style.setProperty('display', 'none')
+            )
+        }
         break
       
       case Constants.client.FAIL_LOGOUT_WHILE_CONNECTED.word:
@@ -333,6 +371,7 @@ export default class Client {
 
       case Constants.server.UNICAST_WELCOME.word:
         this.handle = action.payload.handle
+        this.room = action.payload.room
         for (let i = 0; i < action.payload.usersList.length; ++i) {
           this.usersList.set(action.payload.usersList[i], null)
         }
@@ -360,7 +399,6 @@ export default class Client {
 
       case Constants.ws.OPEN.word:
         this.isChatConnected = true
-        this.room = 'general'
         break
 
       case Constants.ws.CLOSE.word:
