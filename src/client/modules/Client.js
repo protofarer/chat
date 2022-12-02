@@ -63,6 +63,11 @@ export default class Client {
     this.toggleTimestampButt.innerText = 'TOGG-TS'
     this.menu.appendChild(this.toggleTimestampButt)
 
+    this.pingButt = document.createElement('button')
+    this.pingButt.id = 'pingButt'
+    this.pingButt.innerText = 'ping'
+    this.menu.appendChild(this.pingButt)
+
     this.statusBar = document.createElement('div')
     this.statusBar.id = 'statusBar'
     this.topBar.appendChild(this.statusBar)
@@ -106,11 +111,29 @@ export default class Client {
     await this.handler({ type: Constants.client.ASK_WS_OPEN.word })
   }
 
+  async ping() {
+    try {
+      const res = await fetch(
+        `${this.ENV.URL}/ping`,
+        { method: 'GET'}
+      )
+      if (res.ok) {
+        this.chatbox.addChatFromClient(this, res.data)
+      }
+    } catch (err) {
+      console.error(err)
+      this.chatbox.addChatFromClient(this, "failed to ping")
+    }
+  }
+
   async login() {
     try {
       const response = await fetch(
         `${this.ENV.URL}/login`, 
-        { method: 'POST', credentials: 'same-origin' }
+        { 
+          method: 'GET', 
+          credentials: 'same-origin' 
+        }
       )
       if (response.ok) {
         return await response.json()
@@ -205,6 +228,10 @@ export default class Client {
     this.sendButt.addEventListener('click', handleSend)
     this.userTextInput.addEventListener('keydown', (e) => {
       e.key === 'Enter' && handleSend(e)
+    })
+
+    this.pingButt.addEventListener('click', async () => {
+      this.ping()
     })
   }
 

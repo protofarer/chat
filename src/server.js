@@ -24,16 +24,24 @@ const sessionParser = session({
 app.use(cors())
 app.use(sessionParser)
 
-// app.all('/', function(req, res, next) {
+app.all('*', function(req, res, next) {
+// // server cannot set cookies with ACAO * !!!
 
-// server cannot set cookies with ACAO * !!!
-//   res.header("Access-Control-Allow-Origin", "*")
-//   res.header("Access-Control-Allow-Headers", "X-Reqed-With")
-//   next()
-//  })
+  res.set("Access-Control-Allow-Origin", "*")
+
+//   // res.set("Access-Control-Allow-Origin", "http://192.168.1.200:3001")
+//   // res.set("Vary", "origin")
+//   // res.set("Access-Control-Allow-Credentials", "true")
+// //   res.set("Access-Control-Allow-Headers", "X-Reqed-With")
+  next()
+ })
+
+app.get("/ping", (req, res) => {
+  res.send(JSON.stringify({ data: "pong" }))
+})
 
 // * Partial implementation until Kade hookup
-app.post('/login', (req, res) => {
+app.get('/login', (req, res) => {
   console.log(`IN /login`, )
   
   // const id = uuid.v4()
@@ -49,10 +57,6 @@ app.post('/login', (req, res) => {
       chatCounter: chatCounter++,
     }
   }
-  
-  // or res.writeHead ?
-  res.set("Access-Control-Allow-Origin", "http://192.168.1.200:3001")
-  // res.set("Access-Control-Allow-Origin", "*")
   res.send(JSON.stringify(message))
 })
 
