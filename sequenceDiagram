@@ -7,14 +7,14 @@ sequenceDiagram
   participant O as Other Users (view in browser)
 
   U->>C: click LOGIN
-  C->>S: POST http://serverhost:3000/login
-  Note right of C: Origin: http://clienthost:3001<br>Sec-Fetch-Site: cross-site<br>Referrer: http://clienthost:3001/
+  C->>S: POST http://hostname:3000/login
+  Note right of C: Origin: http://hostname:3001<br>Sec-Fetch-Site: cross-site<br>Referrer: http://host:3001/
   S->>C: 200 OK
   Note left of S: Access-Control-Allow-Origin: *<br>Connection: keep-alive<br>Keep-Alive: timeout=5<br>X-Powered-By: Express<br>Date: Fri, 02 Dec 2022...
   note left of S: JSON: LOGGEDIN object
 
   U->>C: click CONNECT
-  C->>S: GET wss://serverhost:3000/
+  C->>S: GET wss://hostname:3000/
   note right of C: Upgrade: websocket<br>Connection: keep-alive, Upgrade<br>Sec-Fetch-Dest/Mode: websocket<br>Sec-WebSocket-Key: A3be...SQ==
   S->>C: 101 Switching Protocols
   note left of S: Connection: Upgrade<br>Sec-Websocket-Accept: AAswx...KQ=<br>Upgrade: websocket

@@ -14,9 +14,9 @@ export default class ChatBox {
     chatLine.id = id;
     chatLine.className = 'chatLine'
   
-    if (sender === 'knet') {
+    if (sender === 'system') {
       chatLine.className += " chatLineServer"
-    } else if (sender === 'cli' || sender === 'room-general') {
+    } else if (sender === 'client') {
       chatLine.className += " chatLineClient"
     }  
 
@@ -43,19 +43,15 @@ export default class ChatBox {
   }
   
   addChatFromClient(client, lineText) {
-    const id = `${Date.now()}-cli-${client.chatCounter}`
-  
     const time = new Date().toLocaleTimeString(
           'en-US', 
           { timeZoneName: 'short' }
         )
   
-    const sender = 'cli'
-    
     this.addChat({
-      id,
+      id:`${Date.now()}-cli-${client.chatCounter}`,
       time,
-      sender,
+      sender: 'client',
       body: lineText,
     })
     // Client appends chatCounter to id, server handles its own
@@ -68,16 +64,14 @@ export default class ChatBox {
     id += `${action.payload.chatCounter}`
   
     let time = new Date(action.payload.time).toLocaleTimeString(
-          'en-US', 
-          { timeZoneName: 'short' }
-        )
-  
-    const sender = action.payload.sender
+      'en-US', 
+      { timeZoneName: 'short' }
+    )
   
     this.addChat({
       id,
       time,
-      sender,
+      sender: action.payload.sender,
       body: action.payload.body
     })
   }

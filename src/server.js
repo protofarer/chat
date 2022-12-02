@@ -25,6 +25,8 @@ app.use(cors())
 app.use(sessionParser)
 
 // app.all('/', function(req, res, next) {
+
+// server cannot set cookies with ACAO * !!!
 //   res.header("Access-Control-Allow-Origin", "*")
 //   res.header("Access-Control-Allow-Headers", "X-Reqed-With")
 //   next()
@@ -41,12 +43,14 @@ app.post('/login', (req, res) => {
   const message = {
     type: Constants.server.LOGGEDIN.word,
     payload: {
-      sender: 'knet',
+      sender: 'system',
       body: `You logged in.`,
       time: new Date(),
       chatCounter: chatCounter++,
     }
   }
+  
+  // or res.writeHead ?
   // res.set("Access-Control-Allow-Origin", "https://192.168.1.200:3000")
   // res.set("Access-Control-Allow-Origin", "*")
   res.send(JSON.stringify(message))
@@ -69,7 +73,7 @@ app.post('/logout', (req, res) => {
     const message = {
       type: Constants.server.LOGGEDOUT.word,
       payload: {
-        sender: 'knet',
+        sender: 'system',
         body: `You are logged out.`,
         time: new Date(),
         chatCounter: chatCounter++,
@@ -252,7 +256,6 @@ server.on('connection', connection => {
     .filter(curr => curr !== connection)
   )
 })
-
 
 // server.on('error', (err) => console.log(err))
 

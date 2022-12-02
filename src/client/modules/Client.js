@@ -114,13 +114,14 @@ export default class Client {
       if (response.ok) {
         return await response.json()
       } else {
-        throw new Error('Login failed')
+        this.chatbox.addChatFromClient(this, "Login was unsuccessful")
+        throw new Error('Login unsuccessful')
       }
     } catch (err) {
       if (err.name === 'TypeError') {
         console.error(`${err.message}`)
       } else {
-        throw new Error(`Unhandled logout error: ${err}`)
+        throw new Error(`fetch rejected / network error: ${err}`)
       } 
     }
   }
