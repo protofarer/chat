@@ -253,6 +253,9 @@ server.on('connection', connection => {
   )
 })
 
+
+// server.on('error', (err) => console.log(err))
+
 function shutDown() {
   console.log(`SIGKILL'ed, graceful shutdown starting...`, )
   server.close(() => {
