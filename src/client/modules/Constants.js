@@ -31,6 +31,10 @@ export default {
       word: 'ASK_WS_CLOSE',
       text: `====== You left the chat. Bye! ======`
     },
+    ERROR: {
+      word: 'ERROR',
+      text: `Unhandled error, sorry!`
+    },
   },
   server: {
     LOGGEDIN: {

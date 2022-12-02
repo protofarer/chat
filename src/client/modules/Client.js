@@ -15,6 +15,7 @@ export default class Client {
     this.setEnv()
     this.makeElements(rootElement)
     this.activateListeners()
+    this.render()
   }
 
   setEnv() {
@@ -118,11 +119,10 @@ export default class Client {
         throw new Error('Login unsuccessful')
       }
     } catch (err) {
-      if (err.name === 'TypeError') {
-        console.error(`${err.message}`)
-      } else {
-        throw new Error(`fetch rejected / network error: ${err}`)
-      } 
+      console.error(`${err.message}`)
+      return { 
+        type: Constants.client.ERROR.word
+      }
     }
   }
 
@@ -248,6 +248,10 @@ export default class Client {
 
   async handler(action) {
     console.log(`ACTION: ${action.type}`)
+    if (!action) {
+      console.log(`handler called with undefined action arg`, )
+    }
+    
 
     switch (action.type) {
 
@@ -356,6 +360,10 @@ export default class Client {
         this.ws.close(1000, 'user intentionally disconnected')
         this.ws.onerror = this.ws.onopen = this.ws.onclose = null
         this.ws = null
+        break
+
+      case Constants.client.ERROR.word:
+        this.chatbox.addChatFromClient(this, Constants.client.ERROR.text)
         break
 
       // * From Server

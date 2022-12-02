@@ -51,7 +51,7 @@ app.post('/login', (req, res) => {
   }
   
   // or res.writeHead ?
-  // res.set("Access-Control-Allow-Origin", "https://192.168.1.200:3000")
+  res.set("Access-Control-Allow-Origin", "http://192.168.1.200:3001")
   // res.set("Access-Control-Allow-Origin", "*")
   res.send(JSON.stringify(message))
 })
@@ -245,8 +245,17 @@ function HandleAssigner() {
 //   (err, connections) => console.log(`${connections} connections currently open`)
 // ), 1000)
 
-process.on('SIGTERM', shutDown)
-process.on('SIGINT', shutDown)
+process.once('SIGTERM', shutDown)
+
+process.once('SIGINT', () => {
+  shutDown()
+  process.kill(process.pid, 'SIGINT')
+})
+
+process.once('SIGUSR2', () => {
+  shutDown()
+  process.kill(process.pid, 'SIGUSR2')
+})
 
 let connections = []
 
@@ -257,17 +266,19 @@ server.on('connection', connection => {
   )
 })
 
-// server.on('error', (err) => console.log(err))
-
 function shutDown() {
-  console.log(`SIGKILL'ed, graceful shutdown starting...`, )
+  console.log(`SIGKILL'ed, begin graceful shutdown...`, )
+
+  // console.log(`Closing wss`, )
+  // wss.close()
+  
   server.close(() => {
-    console.log(`Closed out remaining connections`, )
+    console.log(`IN server.close handler: Closed out remaining connections`, )
     process.exit(0)
   })
   
   setTimeout(() => {
-    console.error(`Connections took too long to close, forcefully shutting down`)
+    console.error(`Connections took too long to close, forcefully shutting down p.exit(1)`)
     process.exit(1)
   }, 10000)
 
