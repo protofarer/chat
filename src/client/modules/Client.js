@@ -15,6 +15,7 @@ export default class Client {
     this.setEnv()
     this.makeElements(rootElement)
     this.activateListeners()
+    this.ping()
     this.render()
   }
 
@@ -113,12 +114,14 @@ export default class Client {
 
   async ping() {
     try {
+      console.log(`fetch ${this.ENV.URL}/ping`, )
       const res = await fetch(
         `${this.ENV.URL}/ping`,
         { method: 'GET'}
       )
       if (res.ok) {
-        this.chatbox.addChatFromClient(this, res.data)
+        const data = await res.json()
+        this.chatbox.addChatFromClient(this, data.someProp)
       }
     } catch (err) {
       console.error(err)

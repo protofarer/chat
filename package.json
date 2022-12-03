@@ -9,7 +9,7 @@
   "scripts": {
     "olddev": "DEBUG=express-session concurrently 'vite --host' 'nodemon --verbose --watch src/server.js'",
     "dev": "DEBUG=express-session nodemon --verbose --watch src/server.js",
-    "start": "DEBUG=vite* vite serve --host",
+    "start": "vite serve --host",
     "build": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint ."

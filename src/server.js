@@ -21,13 +21,18 @@ const sessionParser = session({
   resave: false
 })
 
-app.use(cors())
-app.use(sessionParser)
+app.use(cors({
+  origin: 'http://192.168.1.200:3001',
+  // * Configures the Access-Control-Allow-Credentials CORS header. Set to true to
+  // * pass the header, otherwise it is omitted.  
+  // credentials: true
+}))
+// app.use(sessionParser)
 
 app.all('*', function(req, res, next) {
 // // server cannot set cookies with ACAO * !!!
 
-  res.set("Access-Control-Allow-Origin", "*")
+  // res.set("Access-Control-Allow-Origin", "*")
 
 //   // res.set("Access-Control-Allow-Origin", "http://192.168.1.200:3001")
 //   // res.set("Vary", "origin")
@@ -37,11 +42,12 @@ app.all('*', function(req, res, next) {
  })
 
 app.get("/ping", (req, res) => {
-  res.send(JSON.stringify({ data: "pong" }))
+  console.log(`PONG`, )
+  res.send(JSON.stringify({ someProp: "pong" }))
 })
 
 // * Partial implementation until Kade hookup
-app.get('/login', (req, res) => {
+app.get('/login', sessionParser, (req, res) => {
   console.log(`IN /login`, )
   
   // const id = uuid.v4()
@@ -87,6 +93,7 @@ app.post('/logout', (req, res) => {
   })
 })
 
+const PORT = parseInt(process.env.PORT)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const server = https.createServer(
   {
@@ -95,6 +102,20 @@ const server = https.createServer(
   }, 
   app
 )
+
+const startupLog = () => { 
+  console.log(`listening on https://${server.address().address}:${server.address().port} in ${app.get("env")} mode`) 
+}
+server.listen(PORT, startupLog)
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.log('Address in use, retrying...')
+    setTimeout(() => {
+      server.close()
+      server.listen(PORT, startupLog)
+    }, 1000)
+  }
+})
 
 const wss = new WebSocketServer({ noServer: true, clientTracking: true })
 const sessionUsers = {}    // Dictionary, userId as key
@@ -211,12 +232,6 @@ wss.on('close', function(event) {
 
 wss.on('error', (event) => {
   console.log('WSS errored: ', event)
-})
-
-const HOST = process.env.HOST
-const PORT = process.env.PORT
-server.listen(PORT, HOST, () => {
-  console.log(`listening on https://${HOST}:${PORT} in ${app.get("env")} mode`)
 })
 
 wss.on('listen', () => {
