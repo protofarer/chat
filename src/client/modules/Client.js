@@ -10,6 +10,8 @@ export default class Client {
   usersList = new Map()
   chatCounter = 0
   isTimestampShown = false
+  heartbeatTimeoutID
+  isServerAvailable = false
 
   constructor(rootElement) {
     this.setEnv()
@@ -17,6 +19,17 @@ export default class Client {
     this.activateListeners()
     this.ping()
     this.render()
+  }
+
+  heartbeat() {
+    clearTimeout(this.heartbeatTimeoutID)
+
+    this.heartbeatTimeoutID = setTimeout(() => {
+      console.log(`heartbeat interval exceeded, destroying ws`, )
+      clearInterval(this.pingIntervalID)
+      this.chatbox.addChatFromClient(this, "You lost connection with the chat server")
+      this.handler({ type: Constants.ws.CLOSE.word })
+    }, Constants.ws.HEARTBEAT_INTERVAL.value + Constants.ws.HEARTBEAT_LATENCYBUFFER.value)
   }
 
   setEnv() {
@@ -350,11 +363,17 @@ export default class Client {
         this.ws.addEventListener('message', handleWSEvents.bind(this))
         this.ws.addEventListener('error', handleWSEvents.bind(this))
         this.ws.addEventListener('close', handleWSEvents.bind(this))
-        console.log(`ws setup done`, )
+
+        const pinger = () => {
+          console.log(`ping server`, )
+          this.isServerAvailable = false
+          this.ws.send(JSON.stringify({ type: Constants.client.PING.word }))
+        }
+        this.pingIntervalID = setInterval(pinger, Constants.ws.HEARTBEAT_INTERVAL.value)
 
         function handleWSEvents(event) {
           // Handle incoming server websocket events
-          console.log('WS EVENT:', event.type)
+          console.log('WS EVENT TYPE:', event.type)
           switch (event.type) {
             case 'error':
               console.log('error code:', event.code)     
@@ -372,7 +391,7 @@ export default class Client {
               }
               break
             case 'message':
-              console.log('raw message event from server', event)
+              // console.log('raw message event from server', event)
               const message = JSON.parse(event.data)
               this.handler(message)
               break
@@ -386,9 +405,10 @@ export default class Client {
         this.chatbox.addChatFromClient(this, Constants.client.ASK_WS_CLOSE.text)
         this.isChatConnected = false
         this.room = null
-        this.handle = null
         this.chatCounter = 0
-        this.usersList.clear()
+        this.usersList.clear() 
+        clearInterval(this.pingIntervalID)
+        clearTimeout(this.heartbeatTimeoutID)
         // Client closes itself without waiting for a response
         this.ws.close(1000, 'user intentionally disconnected')
         this.ws.onerror = this.ws.onopen = this.ws.onclose = null
@@ -437,6 +457,12 @@ export default class Client {
         this.usersList.delete(action.payload.handle)
         break
 
+      case Constants.server.PONG.word:
+        this.isServerAvailable = true
+        this.heartbeat()
+        console.log(`received PONG message`, )
+        break
+
       // * WebSocket Server Receipts
 
       case Constants.ws.OPEN.word:
@@ -447,10 +473,13 @@ export default class Client {
         // reachable when server restarts or sends its close signal first
         this.chatbox.addChatFromClient(this, Constants.ws.CLOSE.text)
         this.isChatConnected = false
-        this.room = ''
+        this.room = null
+        this.usersList.clear()
+        clearTimeout(this.heartbeatTimeoutID)
+        clearInterval(this.pingIntervalID)
         // server doesn't receive this close event if the ws.close
         // initiated by server
-        this.ws.close(1000, 'confirm server ws.close')
+        this.ws.close(1000, 'server initiated ws.close')
         this.ws.onerror = this.ws.onopen = this.ws.onclose = null
         this.ws = null
         break

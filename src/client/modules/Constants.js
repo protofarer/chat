@@ -31,6 +31,9 @@ export default {
       word: 'ASK_WS_CLOSE',
       text: `====== You left the chat. Bye! ======`
     },
+    PING: {
+      word: 'PING'
+    },
     ERROR: {
       word: 'ERROR',
       text: `Unhandled error, sorry!`
@@ -63,6 +66,9 @@ export default {
       text(_, handle) {
         return `====== <em>${handle}</em> left the chat. ======`
       }
+    },
+    PONG: {
+      word: 'PONG'
     },
     HANDLE_POOL: [
       'ryu',
@@ -99,5 +105,11 @@ export default {
       word: 'FAIL_LOGOUT_WHILE_WS_CONNECTED',
       text: `There is no ws connection to close while logged out`
     },
+    HEARTBEAT_INTERVAL: {
+      value: 3000
+    },
+    HEARTBEAT_LATENCYBUFFER: {
+      value: 1000
+    }
   }
 }

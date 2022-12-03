@@ -116,57 +116,88 @@ server.on('upgrade', (req, socket, head) => {
   })
 })
 
+function heartbeat() {
+  this.isAlive = true
+}
+
+const intervalID = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    console.log(`pinging a client, isAlive=`, ws.isAlive )
+    
+    if (ws.isAlive === false) {
+      console.log(`no client heartbeat, terminating ws`, )
+      return ws.terminate()
+    }
+    ws.isAlive = false
+    
+    ws.ping()
+  })
+}, Constants.ws.HEARTBEAT_INTERVAL.value)
+
 wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
-    const handle = generateHandle()
-    sessionUsers[req.session.id] = { ws, handle }
-    console.log(`wss.on connection: reqsessid:`, req.session.id)
-    
+  console.log(`ip ${req.socket.remoteAddress} connected to wss.`, )
+  console.log(`ip ${req.headers['x-forwarded-for']?.split(',')[0].trim()} via X-forwarded-for`)
+
+  ws.isAlive = true
+  ws.on('pong', heartbeat.bind(ws))
   
-    console.log(`user connected(sess-id:${req.session.id}), connection count: (tmp hidden): `)
-    const usersList = Object.values(sessionUsers).map(o => o.handle)
-    
-    // Send welcome message to user entering room
-    const userWelcomeMessage = {
-      type: Constants.server.UNICAST_WELCOME.word,
-      payload: {
-        sender: "system",
-        time: new Date(),
-        body: Constants.server.UNICAST_WELCOME.text`${handle}`,
-        room: Constants.server.DEFAULT_ROOMS[0],
-        handle,
-        usersList,
-        chatCounter: chatCounter++,
-      }
-    }
-    ws.send(JSON.stringify(userWelcomeMessage))   
+  const handle = generateHandle()
+  sessionUsers[req.session.id] = { ws, handle }
+  console.log(`wss.on connection: reqsessid:`, req.session.id)
 
-    // Broadcast entering user to clients
-    const roomUserEntryMessage = {
-      type: Constants.server.BROADCAST_ENTRY.word,
-      payload: {
-        sender: "system",
-        time: new Date(),
-        body: Constants.server.BROADCAST_ENTRY.text`${handle}`,
-        handle,
-        chatCounter: chatCounter++,
-      }
+  const usersList = Object.values(sessionUsers).map(o => o.handle)
+  
+  // Send welcome message to user entering room
+  const userWelcomeMessage = {
+    type: Constants.server.UNICAST_WELCOME.word,
+    payload: {
+      sender: "system",
+      time: new Date(),
+      body: Constants.server.UNICAST_WELCOME.text`${handle}`,
+      room: Constants.server.DEFAULT_ROOMS[0],
+      handle,
+      usersList,
+      chatCounter: chatCounter++,
     }
-    broadcastMessage(roomUserEntryMessage, ws)
+  }
+  ws.send(JSON.stringify(userWelcomeMessage))   
 
-    ws.on('message', function (rawMessage) {
-      let message = JSON.parse(rawMessage)
-      switch (message.type) {
-        case Constants.client.SEND_CHAT.word:
-          message.payload.sender = handle
-          message.type = Constants.server.BROADCAST_CHAT.word
-          message.payload.chatCounter = chatCounter++
-          broadcastMessage(message)
-          break
-        default:
-          console.log('Error: Unhandled message type:', message.type)
-      }
-    })
+  // Broadcast entering user to clients
+  const roomUserEntryMessage = {
+    type: Constants.server.BROADCAST_ENTRY.word,
+    payload: {
+      sender: "system",
+      time: new Date(),
+      body: Constants.server.BROADCAST_ENTRY.text`${handle}`,
+      handle,
+      chatCounter: chatCounter++,
+    }
+  }
+  broadcastMessage(roomUserEntryMessage, ws)
+
+  ws.on('message', function (rawMessage) {
+    let message = JSON.parse(rawMessage)
+    switch (message.type) {
+      case Constants.client.SEND_CHAT.word:
+        message.payload.sender = handle
+        message.type = Constants.server.BROADCAST_CHAT.word
+        message.payload.chatCounter = chatCounter++
+        broadcastMessage(message)
+        break
+
+      // Ping from client, since ws spec doesn't support ping event on browser
+      // instead, browser client pings server via message rather than event
+      case Constants.client.PING.word:
+        const pingMessage = {
+          type: Constants.server.PONG.word,
+        }
+        ws.send(JSON.stringify(pingMessage))
+        break
+      default:
+        console.log('Error: Unhandled message type:', message.type)
+    }
+  })
 
   ws.on('close', function () {
     const handle = sessionUsers[req.session.id].handle
@@ -208,7 +239,8 @@ wss.on('connection', function (ws, req, client) {
 
 wss.on('close', function(event) {
   console.log('wss close:', event)
-  // TODO find a way to broadcast server/room shutting down
+  clearInterval(intervalID)
+  // TODO find a way to broadcast server shutting down
 })
 
 wss.on('error', (event) => {
