@@ -101,6 +101,13 @@ const generateHandle = HandleAssigner()
 // must be setup manually for detached HTTPS server
 server.on('upgrade', (req, socket, head) => {
   console.log(`IN server.on upgrade`, )
+  if (req.headers.origin !== process.env.CLIENT_ORIGIN) {
+    console.log(`bad websocket connect request: invalid origin ${req.headers.origin}, ip:${socket.remoteAddress}`)
+    socket.write('HTTP/1.1 401 Gitowtta Mahows\r\n\r\n')
+    socket.destroy()
+    return
+  }
+  
   // TODO are there other upgrade values beside websokets to check for?
 
   // TODO handle when wss.handleUpgrade goes wrong?
