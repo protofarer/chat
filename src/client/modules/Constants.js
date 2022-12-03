@@ -106,7 +106,7 @@ export default {
       text: `There is no ws connection to close while logged out`
     },
     HEARTBEAT_INTERVAL: {
-      value: 3000
+      value: 2000
     },
     HEARTBEAT_LATENCYBUFFER: {
       value: 1000

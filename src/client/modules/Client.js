@@ -130,7 +130,7 @@ export default class Client {
       console.log(`fetch ${this.ENV.URL}/ping`, )
       const res = await fetch(
         `${this.ENV.URL}/ping`,
-        { method: 'GET'}
+        { method: 'GET' }
       )
       if (res.ok) {
         const data = await res.json()
@@ -356,20 +356,17 @@ export default class Client {
         break
 
       case Constants.client.ASK_WS_OPEN.word:
-        // CSDR await?
-        // ws = new WebSocket(`wss://${location.host}`)
+        // ! THIS IS NOT THE NODE WS LIB WebSocket Object, it is the native browser API!!!
         this.ws = new WebSocket(`wss://${this.ENV.SERVER_HOST}:${this.ENV.SERVER_PORT}`)
         this.ws.addEventListener('open', handleWSEvents.bind(this))
         this.ws.addEventListener('message', handleWSEvents.bind(this))
         this.ws.addEventListener('error', handleWSEvents.bind(this))
         this.ws.addEventListener('close', handleWSEvents.bind(this))
 
-        const pinger = () => {
-          console.log(`ping server`, )
+        this.pingIntervalID = setInterval(() => {
           this.isServerAvailable = false
           this.ws.send(JSON.stringify({ type: Constants.client.PING.word }))
-        }
-        this.pingIntervalID = setInterval(pinger, Constants.ws.HEARTBEAT_INTERVAL.value)
+        }, Constants.ws.HEARTBEAT_INTERVAL.value)
 
         function handleWSEvents(event) {
           // Handle incoming server websocket events
@@ -460,7 +457,6 @@ export default class Client {
       case Constants.server.PONG.word:
         this.isServerAvailable = true
         this.heartbeat()
-        console.log(`received PONG message`, )
         break
 
       // * WebSocket Server Receipts

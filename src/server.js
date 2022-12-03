@@ -27,14 +27,15 @@ app.all('*', function(req, res, next) {
   next()
  })
 
-app.get("/ping", (req, res) => {
-  console.log(`PONG`, )
-  res.send(JSON.stringify({ someProp: "pong" }))
+app.get("/health", (req, res) => {
+  console.log(`healthchecked`, )
+  res.send(JSON.stringify({ someProp: "healthy" }))
 })
 
 app.get('/login', (req, res) => {
   console.log(`IN /login`, )
   
+  // TODO handle assign here
   // const id = uuid.v4()
   // req.session.userId = id
 
@@ -88,9 +89,8 @@ const server = https.createServer(
   app
 )
 
-// Must be detached from HTTPS server
 const wss = new WebSocketServer({ 
-  noServer: true, 
+  noServer: true,   // Must be detached from HTTPS server
   clientTracking: true,
   maxPayload: 5000,
 })
@@ -98,8 +98,10 @@ const sessionUsers = {}    // Dictionary, userId as key
 let chatCounter = 0
 const generateHandle = HandleAssigner()
 
+// must be setup manually for detached HTTPS server
 server.on('upgrade', (req, socket, head) => {
   console.log(`IN server.on upgrade`, )
+  // TODO are there other upgrade values beside websokets to check for?
 
   // TODO handle when wss.handleUpgrade goes wrong?
   // TODO sessionParser improvement, fam
@@ -177,7 +179,13 @@ wss.on('connection', function (ws, req, client) {
   broadcastMessage(roomUserEntryMessage, ws)
 
   ws.on('message', function (rawMessage) {
-    let message = JSON.parse(rawMessage)
+    let message
+    try {
+      message = JSON.parse(rawMessage)
+    } catch (err) {
+      console.log(err)
+      return
+    }
     switch (message.type) {
       case Constants.client.SEND_CHAT.word:
         message.payload.sender = handle
