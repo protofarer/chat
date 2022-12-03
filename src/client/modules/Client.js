@@ -129,7 +129,7 @@ export default class Client {
     try {
       console.log(`fetch ${this.ENV.URL}/ping`, )
       const res = await fetch(
-        `${this.ENV.URL}/ping`,
+        `${this.ENV.URL}/health`,
         { method: 'GET' }
       )
       if (res.ok) {
@@ -293,12 +293,10 @@ export default class Client {
   }
 
   async handler(action) {
-    console.log(`ACTION: ${action.type}`)
+    action.type !== 'PONG' && console.log(`ACTION: ${action.type}`)
     if (!action) {
       console.log(`handler called with undefined action arg`, )
     }
-    
-
     switch (action.type) {
 
       // * From Client
@@ -370,7 +368,7 @@ export default class Client {
 
         function handleWSEvents(event) {
           // Handle incoming server websocket events
-          console.log('WS EVENT TYPE:', event.type)
+          event.type === 'message' && JSON.parse(event.data) !== 'PONG' && console.log('WS EVENT TYPE:', event.type)
           switch (event.type) {
             case 'error':
               console.log('error code:', event.code)     
@@ -407,7 +405,7 @@ export default class Client {
         clearInterval(this.pingIntervalID)
         clearTimeout(this.heartbeatTimeoutID)
         // Client closes itself without waiting for a response
-        this.ws.close(1000, 'user intentionally disconnected')
+        this.ws.close(1000, 'User intentionally disconnected')
         this.ws.onerror = this.ws.onopen = this.ws.onclose = null
         this.ws = null
         break

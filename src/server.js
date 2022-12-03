@@ -62,8 +62,9 @@ app.post('/logout', (req, res) => {
     // CSDR delete from sessionUsers
     if (ws) {
       // CSDR is delete handled by the ws.onclose block?
+      console.log(`Client ws still exists despite logout, cleaning up`, )
       delete sessionUsers[req.session.id]
-      ws.close()
+      ws.close(1006, 'Cleanup logging out client')
     }
 
     const message = {
@@ -101,9 +102,9 @@ const generateHandle = HandleAssigner()
 // must be setup manually for detached HTTPS server
 server.on('upgrade', (req, socket, head) => {
   console.log(`IN server.on upgrade`, )
-  if (req.headers.origin !== process.env.CLIENT_ORIGIN) {
+  if (req.headers?.origin !== process.env?.CLIENT_ORIGIN) {
     console.log(`bad websocket connect request: invalid origin ${req.headers.origin}, ip:${socket.remoteAddress}`)
-    socket.write('HTTP/1.1 401 Gitowtta Mahows\r\n\r\n')
+    socket.write('HTTP/1.1 403 Forbidden \r\n\r\n')
     socket.destroy()
     return
   }
@@ -315,9 +316,6 @@ server.on('connection', connection => {
 
 function shutDown() {
   console.log(`SIGKILL'ed, begin graceful shutdown...`, )
-
-  // console.log(`Closing wss`, )
-  // wss.close()
   
   server.close(() => {
     console.log(`IN server.close handler: Closed out remaining connections`, )
