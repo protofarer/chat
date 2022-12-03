@@ -4,10 +4,8 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import https from 'https'
 import express from 'express'
-import cors from 'cors'
 import session from 'express-session'
-import WebSocket from 'ws'
-import { WebSocketServer } from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import Constants from './client/modules/Constants.js' // TODO dev only, direct import; prod build step copies app/modules/Constants.js to server prod dir
@@ -21,23 +19,11 @@ const sessionParser = session({
   resave: false
 })
 
-app.use(cors({
-  origin: 'http://192.168.1.200:3001',
-  // * Configures the Access-Control-Allow-Credentials CORS header. Set to true to
-  // * pass the header, otherwise it is omitted.  
-  // credentials: true
-}))
-// app.use(sessionParser)
+app.use(sessionParser)
 
 app.all('*', function(req, res, next) {
-// // server cannot set cookies with ACAO * !!!
-
-  // res.set("Access-Control-Allow-Origin", "*")
-
-//   // res.set("Access-Control-Allow-Origin", "http://192.168.1.200:3001")
-//   // res.set("Vary", "origin")
-//   // res.set("Access-Control-Allow-Credentials", "true")
-// //   res.set("Access-Control-Allow-Headers", "X-Reqed-With")
+  res.set("Access-Control-Allow-Origin", process.env.CLIENT_ORIGIN)
+  // res.set("Access-Control-Allow-Credentials", "true")
   next()
  })
 
@@ -46,8 +32,7 @@ app.get("/ping", (req, res) => {
   res.send(JSON.stringify({ someProp: "pong" }))
 })
 
-// * Partial implementation until Kade hookup
-app.get('/login', sessionParser, (req, res) => {
+app.get('/login', (req, res) => {
   console.log(`IN /login`, )
   
   // const id = uuid.v4()
@@ -103,20 +88,7 @@ const server = https.createServer(
   app
 )
 
-const startupLog = () => { 
-  console.log(`listening on https://${server.address().address}:${server.address().port} in ${app.get("env")} mode`) 
-}
-server.listen(PORT, startupLog)
-server.on('error', (e) => {
-  if (e.code === 'EADDRINUSE') {
-    console.log('Address in use, retrying...')
-    setTimeout(() => {
-      server.close()
-      server.listen(PORT, startupLog)
-    }, 1000)
-  }
-})
-
+// Must be detached from HTTPS server
 const wss = new WebSocketServer({ noServer: true, clientTracking: true })
 const sessionUsers = {}    // Dictionary, userId as key
 let chatCounter = 0
@@ -124,6 +96,9 @@ const generateHandle = HandleAssigner()
 
 server.on('upgrade', (req, socket, head) => {
   console.log(`IN server.on upgrade`, )
+
+  // TODO handle when wss.handleUpgrade goes wrong?
+  // TODO sessionParser improvement, fam
   sessionParser(req, {}, () => {
     console.log('Parsing session from req')
     if (!req.session.id) {
@@ -141,6 +116,8 @@ wss.on('connection', function (ws, req, client) {
   // Upon connection right before client ws opens
     const handle = generateHandle()
     sessionUsers[req.session.id] = { ws, handle }
+    console.log(`wss.on connection: reqsessid:`, req.session.id)
+    
   
     console.log(`user connected(sess-id:${req.session.id}), connection count: (tmp hidden): `)
     const usersList = Object.values(sessionUsers).map(o => o.handle)
@@ -304,3 +281,17 @@ function shutDown() {
   connections.forEach(curr => curr.end())
   setTimeout(() => connections.forEach(curr => curr.destroy(), 5000))
 }
+
+const startupLog = () => { 
+  console.log(`listening on https://${server.address().address}:${server.address().port} in ${app.get("env")} mode`) 
+}
+server.listen(PORT, startupLog)
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.log('Address in use, retrying...')
+    setTimeout(() => {
+      server.close()
+      server.listen(PORT, startupLog)
+    }, 1000)
+  }
+})

@@ -130,25 +130,25 @@ export default class Client {
   }
 
   async login() {
+    // * Replace this with flow that prompts for login (existing or anon)
+    // * with a modal if no current session.
+    // * For now it is a placeholder for complex user flow
     try {
       const response = await fetch(
         `${this.ENV.URL}/login`, 
         { 
           method: 'GET', 
-          credentials: 'same-origin' 
+          // credentials: 'same-origin' 
         }
       )
-      if (response.ok) {
-        return await response.json()
-      } else {
+      if (!response.ok) {
         this.chatbox.addChatFromClient(this, "Login was unsuccessful")
         throw new Error('Login unsuccessful')
       }
+      return await response.json()
     } catch (err) {
       console.error(`${err.message}`)
-      return { 
-        type: Constants.client.ERROR.word
-      }
+      return { type: Constants.client.ERROR.word }
     }
   }
 
@@ -156,7 +156,10 @@ export default class Client {
     try {
       const response = await fetch(
         `${this.ENV.URL}/logout`,
-        { method: 'POST', credentials: 'same-origin' }
+        { 
+          method: 'POST', 
+          // credentials: 'same-origin' 
+        }
       )
       if (response.ok) {
         this.isLoggedIn = false

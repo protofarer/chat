@@ -15,7 +15,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "cors": "2.x",
     "dompurify": "^2.4.1",
     "dotenv": "16.x",
     "express": "4.x",
