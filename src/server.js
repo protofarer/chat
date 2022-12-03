@@ -89,7 +89,11 @@ const server = https.createServer(
 )
 
 // Must be detached from HTTPS server
-const wss = new WebSocketServer({ noServer: true, clientTracking: true })
+const wss = new WebSocketServer({ 
+  noServer: true, 
+  clientTracking: true,
+  maxPayload: 5000,
+})
 const sessionUsers = {}    // Dictionary, userId as key
 let chatCounter = 0
 const generateHandle = HandleAssigner()
