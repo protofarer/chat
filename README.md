@@ -1,6 +1,6 @@
 
 # Description
-Chat app in JS with websockets
+A simple chat app with websockets, server-client
 # Milestones
 ## prototype
 - JS no libraries
